@@ -1,7 +1,10 @@
 package main
 
 import (
-	"encoding/json"
+	//"encoding/json"
+	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/websocket"
@@ -45,7 +48,7 @@ func TestConnect(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		defer ws.Close()
+		ws.Close()
 	
 	}
 
@@ -53,30 +56,18 @@ func TestConnect(t *testing.T) {
 
 func TestInit(t *testing.T) {
 
-  ws, _, err := websocket.DefaultDialer.Dial(
-		"ws://127.0.0.1:8000/api/games", nil)
+  form := url.Values{}
+	form.Add("periods", "19")
+	form.Add("minutes", "12")
+
+  r, postErr := http.Post("http://127.0.0.1:8000/api/games",
+	  "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
 	
-	if err != nil {
-		t.Fatal(err)
+	if postErr != nil {
+		t.Fatal(postErr)
 	}
 
-	defer ws.Close()
+	t.Log(r)
 
-  req := Req{
-		Cmd: WS_INIT,
-		Periods: 4,
-	}
-
-  j, marshalErr := json.Marshal(req)
-
-  if marshalErr != nil {
-		t.Error(marshalErr)
-	}
-
-	writeErr := ws.WriteMessage(websocket.TextMessage, j)
-
-  if writeErr != nil {
-		t.Fatal(writeErr)
-	}
-
+	
 } // TestInit
