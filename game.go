@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 const (
@@ -31,6 +33,17 @@ type Config struct {
 	Home        string  `json:"home"`
 	Away        string  `json:"away"`
 }
+
+type GameInfo struct {
+  Settings			*Config
+	Game			    *Game
+}
+
+type PostRes struct {
+	GameId 	string 	`json:"gameId"`
+}
+
+var games = make(map[string]*GameInfo)
 
 func parseConfig(r *http.Request) *Config {
 
@@ -65,9 +78,17 @@ func parseConfig(r *http.Request) *Config {
 					log.Println(err)
 				} else {
 
+          if i < 1 || i > 30 {
+						continue
+					}
+
 					switch f {
 					case PERIODS:
-					  config.Periods = int(i)
+
+					  if i == 2 || i == 4 {
+					    config.Periods = int(i)
+						}
+
 					case MINUTES:
 					  config.Minutes = int(i)
 					case FOULS:
@@ -118,17 +139,52 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 		log.Println(gid)
 
-    x := struct {GameId string}{GameId: gid,}
+    ps := PostRes{
+			GameId: gid,
+		}
 		
-		j, err := json.Marshal(x)
+		j, err := json.Marshal(ps)
 
 		if err != nil {
 			log.Println(err)
 		}
 
+    gi := GameInfo{
+			Settings:	config,
+			Game: nil,
+		}
+
+    games[gid] = &gi
+
+		log.Println(games)
+
 		w.Write(j)
 
 	case http.MethodGet:
+
+		vars := mux.Vars(r)
+
+		id := vars["id"]
+
+		log.Printf("[%s] GET /games/%s", version(), id)
+
+		gameInfo := games[id]
+
+		if gameInfo == nil {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+
+			j, jsonErr := json.Marshal(gameInfo.Settings)
+
+			if jsonErr != nil {
+				log.Println(jsonErr)
+			}
+
+			w.Write(j)
+
+		}
+
+	  
 	case http.MethodPut:
 	case http.MethodDelete:
 	default:

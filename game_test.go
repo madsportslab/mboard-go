@@ -1,7 +1,11 @@
 package main
 
 import (
-	//"encoding/json"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -15,13 +19,27 @@ var invalidURL = []string{
 	"ws://127.0.0.1:8000/games",
 	"ws://127.0.0.1:8000/games/",
 	"ws://127.0.0.1:8000/api/games/",
-	"ws://127.0.0.1:8000/api/games/a",
+	"ws://127.0.0.1:8000/ws",
+	"http://127.0.0.1:8000/ws/games",
+	"ws://127.0.0.1:8000/ws/games/g",
 }
 
 var validURL = []string {
-	"ws://127.0.0.1:8000/api/games",
-	"ws://127.0.0.1:8000/api/games/0",
+	"ws://127.0.0.1:8000/ws/games/a",
+	"ws://127.0.0.1:8000/ws/games/0",
 }
+
+func parseBody(body io.ReadCloser, s interface {}) {
+
+  j, readErr := ioutil.ReadAll(body)
+
+  if readErr != nil {
+		log.Println(readErr)
+	}
+
+  json.Unmarshal(j, &s)
+
+} // parseBody
 
 func TestInvalidConnect(t *testing.T) {
 
@@ -48,13 +66,13 @@ func TestConnect(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		ws.Close()
+		defer ws.Close()
 	
 	}
 
 } // TestConnect
 
-func TestInit(t *testing.T) {
+func TestNewGame(t *testing.T) {
 
   form := url.Values{}
 	form.Add("periods", "19")
@@ -67,7 +85,41 @@ func TestInit(t *testing.T) {
 		t.Fatal(postErr)
 	}
 
-	t.Log(r)
+	defer r.Body.Close()
 
+  b := PostRes{}
+
+  j, readErr := ioutil.ReadAll(r.Body)
+
+  if readErr != nil {
+		t.Fatal(readErr)
+	}
+
+  json.Unmarshal(j, &b)
 	
-} // TestInit
+	if b.GameId == "" {
+		t.Fatal("No GameId returned.")
+	}
+
+  url := fmt.Sprintf("%s%s",
+	  "http://127.0.0.1:8000/api/games/", b.GameId)
+	
+	r2, getErr := http.Get(url)
+
+	if getErr != nil {
+		t.Fatal(getErr)
+	}
+
+  config := Config{}
+
+	parseBody(r2.Body, &config)
+
+  if config.Periods != 4 {
+		t.Fatal("Returned incorrect periods")
+	}
+
+	if config.Minutes != 12 {
+		t.Fatal("Returned incorrect minutes")
+	}
+	
+} // TestNewGame

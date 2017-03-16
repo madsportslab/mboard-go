@@ -25,7 +25,9 @@ func initRouter() *mux.Router {
   router := mux.NewRouter()
 
 	router.HandleFunc("/api/games", gameHandler)
-	router.HandleFunc("/api/games/{id:[0-9a-f]+}", socketHandler)
+	router.HandleFunc("/api/games/{id:[0-9a-f]+}", gameHandler)
+	
+	router.HandleFunc("/ws/games/{id:[0-9a-f]+}", socketHandler)
 
   return router
 
