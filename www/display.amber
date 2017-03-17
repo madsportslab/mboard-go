@@ -1,0 +1,39 @@
+extends layout
+
+block content
+  div.container
+    div.row
+      div.col-lg-12.col-md-12.col-sm-12.col-xs-12.shade
+        center
+          h1.big.green 10:52
+            small.light-blue Q4
+    div.row
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+        h1.small.light-blue Cavaliers
+          span.fa.fa-facebook
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+        h1.small.light-blue.pull-right Warriors
+          span.fa.fa-twitter
+    div.row
+      br
+      div.col-lg-5.col-md-5.col-sm-5.col-xs-5.shade
+        h1.big 108
+      div.col-lg-2.col-md-2.col-sm-2.col-xs-2
+      div.col-lg-5.col-md-5.col-sm-5.col-xs-5.shade.border2
+        h1.big.pull-right 99
+    div.row
+      br
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+        span.fa.fa-4x.fa-circle.light-blue
+        span.fa.fa-4x.fa-circle.light-blue
+        span.fa.fa-4x.fa-circle.light-blue
+        span.fa.fa-4x.fa-circle.light-blue
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+        span.fa.fa-4x.fa-circle.light-blue.pull-right
+        span.fa.fa-4x.fa-circle.light-blue.pull-right
+    div.row
+      br
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+        h1.light-blue.small Fouls to Give: 3
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+        h1.light-blue.small.pull-right Fouls to Give: 8

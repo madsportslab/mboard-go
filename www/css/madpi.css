@@ -1,0 +1,82 @@
+/* madpi.css */
+
+html {
+  font-family: sans-serif;
+  font-weight: 200;
+  height: 100%;
+}
+
+body {
+  background: -webkit-linear-gradient( top, #204060, #005994 );
+  background: -moz-linear-gradient( top, #204060, #005994 );
+  height: 100%;
+  color: #ffffff;
+}
+
+a, a:visited, a:hover, a:link {
+  text-decoration: none;
+  font-weight: 200;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 200;
+}
+
+small {
+  color: #538cc6;
+}
+
+/* custom classes */
+
+.big {
+  font-size: 20em;
+}
+
+.medium {
+  font-size: 12em;
+}
+
+.small {
+  font-size: 5em;
+}
+
+.blue-shade {
+  background-color: #204060;
+}
+
+.green {
+  color: #00dd00;
+}
+
+.red {
+  color: #dd0000;
+}
+
+.blue {
+  color: #2d5986;
+}
+
+.light-blue {
+  color: #0096fa;
+}
+
+.border2 {
+  border-bottom: 10px solid #4db8ff;
+  //border-bottom: 10px solid #ff0000;
+}
+
+.border1 {
+  border: 1px solid #538cc6;
+  border-radius: 10px;
+}
+
+.shade {
+  border-radius: 10px;
+  background-color: #1F4060;
+}
+
+/* bootstrap overrides */
+
+.container {
+  width: 1440px;
+}

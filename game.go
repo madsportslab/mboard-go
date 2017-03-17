@@ -36,7 +36,7 @@ type Config struct {
 
 type GameInfo struct {
   Settings			*Config
-	Game			    *Game
+	GameData			*Game
 }
 
 type PostRes struct {
@@ -110,6 +110,31 @@ func parseConfig(r *http.Request) *Config {
 		
 } // parseConfig
 
+func initTeam(name string) *Team {
+
+  team := Team{
+		Name: name,
+		Points: make(map[int]int),
+	}
+
+  return &team
+
+} // initTeam
+
+func initGameClocks() *GameClocks {
+
+  gc := GameClocks{
+		ShotViolationChan: make(chan bool),
+		FinalChan: make(chan bool),
+		OutChan: make(chan []byte),
+		PlayClock: &Clock{Tenths: 0, Seconds: 0, Minutes: 0},
+		ShotClock: &Clock{Tenths: 0, Seconds: 0},
+	}
+
+	return &gc
+
+} // initGameClocks
+
 func generateId(config *Config, length int) string {
 
   now := time.Now().String()
@@ -149,14 +174,21 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 
+		h := initTeam(config.Home)
+		a := initTeam(config.Away)
+
+		c := initGameClocks()
+
     gi := GameInfo{
 			Settings:	config,
-			Game: nil,
+			GameData: &Game{
+				Home: h,
+				Away: a,
+				Clk: c,
+			},
 		}
 
     games[gid] = &gi
-
-		log.Println(games)
 
 		w.Write(j)
 
@@ -183,7 +215,6 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(j)
 
 		}
-
 	  
 	case http.MethodPut:
 	case http.MethodDelete:

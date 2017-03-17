@@ -1,0 +1,15 @@
+doctype 5
+html[lang="en"]
+  head
+    title madpi
+    link[rel="stylesheet"][href="/www/bootstrap/dist/css/bootstrap.min.css"]
+    link[rel="stylesheet"][href="/www/bootstrap-select/dist/css/bootstrap-select.min.css"]
+    link[rel="stylesheet"][href="/www/font-awesome/css/font-awesome.min.css"]
+    link[rel="stylesheet"][href="/www/css/madpi.css"]
+    script[src="/www/jquery/dist/jquery.min.js"]
+    script[src="/www/bootstrap/dist/js/bootstrap.min.js"]
+    script[src="/www/bootstrap-select/dist/js/bootstrap-select.min.js"]
+    script[src="/www/js/config.js"]
+    script[src="/www/js/madpi.js"]
+  body
+    block content
