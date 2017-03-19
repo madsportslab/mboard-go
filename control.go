@@ -125,8 +125,8 @@ func incrementFoul(name string, val int) {
 
   if name == HOME {
 
-		if (game.Settings.Fouls - (game.GameData.Home.Fouls + val) < 0) &&
-		  (game.Settings.Fouls - (game.GameData.Home.Fouls + val) > 10) {
+		if (game.Settings.Fouls - (game.GameData.Home.Fouls + val) < 0) ||
+		  (game.GameData.Home.Fouls + val < 0) {
 			return
 		}
 
@@ -136,8 +136,8 @@ func incrementFoul(name string, val int) {
 
 	} else if name == AWAY {
 
-		if (game.Settings.Fouls - (game.GameData.Away.Fouls + val) < 0) &&
-		  (game.Settings.Fouls - (game.GameData.Away.Fouls + val) > 10) {
+		if (game.Settings.Fouls - (game.GameData.Away.Fouls + val) < 0) ||
+		  (game.GameData.Away.Fouls + val < 0) {
 			return
 		}
 
