@@ -2,10 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
   "net/http"
 
-  "github.com/gorilla/mux"
+  //"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -48,6 +49,12 @@ type Game struct {
 	Period    	int						`json:"period"`
 	Clk					*GameClocks		`json:"clk"`
 	Possession 	bool					`json:"possesion"`
+	//Feed        chan          `json:"feed"`
+}
+
+type Notification struct {
+  Key 			string				`json:"key"`
+	Val				string				`json:"val"`
 }
 
 type Req struct {
@@ -57,91 +64,160 @@ type Req struct {
 
 var control *websocket.Conn
 
-func incrementPoints(id string, name string, val int) {
+func notify(key string, val string) {
 
-  if games[id] == nil {
+	n := Notification{
+		Key: key,
+		Val: val,
+	}
+
+	j, jsonErr := json.Marshal(n)
+
+	if jsonErr != nil {
+		log.Println(jsonErr)
+	}
+
+	control.WriteMessage(websocket.TextMessage, j)
+
+} // notify
+
+func incrementPoints(name string, val int) {
+
+  if game == nil {
 		return
 	}
 
   if name == HOME {
 
-		total := games[id].GameData.Home.Points[games[id].GameData.Period]
+		total := game.GameData.Home.Points[game.GameData.Period]
 		
-		games[id].GameData.Home.Points[games[id].GameData.Period] = total +
+		if (total + val) < 0 {
+			return
+		}
+
+		game.GameData.Home.Points[game.GameData.Period] = total +
 			val
+
+		notify("HOME_SCORE", fmt.Sprintf("%d", total + val))
 		
 	} else if name == AWAY {
 
-		total := games[id].GameData.Away.Points[games[id].GameData.Period]
-
-		games[id].GameData.Away.Points[games[id].GameData.Period] = total
+		total := game.GameData.Away.Points[game.GameData.Period]
 		
-		games[id].GameData.Away.Points[games[id].GameData.Period] = total +
+		if (total + val) < 0 {
+			return
+		}
+
+		game.GameData.Away.Points[game.GameData.Period] = total +
 			val
+
+		notify("AWAY_SCORE", fmt.Sprintf("%d", total + val))
 		
 	}
 
 } // incrementPoints
 
-func incrementFoul(id string, name string, val int) {
+func incrementFoul(name string, val int) {
 
-  if games[id] == nil {
+  if game == nil {
 		return
 	}
 
   if name == HOME {
 
-		games[id].GameData.Home.Fouls = games[id].GameData.Home.Fouls + val
+		if (game.Settings.Fouls - (game.GameData.Home.Fouls + val) < 0) &&
+		  (game.Settings.Fouls - (game.GameData.Home.Fouls + val) > 10) {
+			return
+		}
+
+		game.GameData.Home.Fouls = game.GameData.Home.Fouls + val
 		
+		notify("HOME_FOUL", fmt.Sprintf("%d", (game.Settings.Fouls - game.GameData.Home.Fouls)))
+
 	} else if name == AWAY {
 
-		games[id].GameData.Away.Fouls = games[id].GameData.Away.Fouls + val
+		if (game.Settings.Fouls - (game.GameData.Away.Fouls + val) < 0) &&
+		  (game.Settings.Fouls - (game.GameData.Away.Fouls + val) > 10) {
+			return
+		}
+
+		game.GameData.Away.Fouls = game.GameData.Away.Fouls + val
+
+		notify("AWAY_FOUL", fmt.Sprintf("%d", (game.Settings.Fouls - game.GameData.Away.Fouls)))
 
 	}
 
 } // incrementFoul
 
-func incrementTimeout(id string, name string, val int) {
+func incrementTimeout(name string, val int) {
 
-  if games[id] == nil {
+  if game == nil {
 		return
 	}
 
   if name == HOME {
 
-		games[id].GameData.Home.Fouls = games[id].GameData.Home.Timeouts + val
+		if (game.Settings.Timeouts - (game.GameData.Home.Timeouts + val) < 0) ||
+		  (game.GameData.Home.Timeouts + val < 0) {
+			return
+		}
+
+		game.GameData.Home.Timeouts = game.GameData.Home.Timeouts + val
+
+		notify("HOME_TIMEOUT", fmt.Sprintf("%d", (game.Settings.Timeouts - game.GameData.Home.Timeouts)))
 		
 	} else if name == AWAY {
 
-		games[id].GameData.Away.Fouls = games[id].GameData.Away.Timeouts + val
+		if (game.Settings.Timeouts - (game.GameData.Away.Timeouts + val) < 0) ||
+		  (game.GameData.Away.Timeouts + val < 0) {
+			return
+		}
+
+		game.GameData.Away.Timeouts = game.GameData.Away.Timeouts + val
+
+		notify("AWAY_TIMEOUT", fmt.Sprintf("%d", (game.Settings.Timeouts - game.GameData.Away.Timeouts)))
 
 	}
 
 } // incrementTimeout
 
 
-func incrementPeriod(id string, val int) {
+func incrementPeriod(val int) {
 
-  games[id].GameData.Period = games[id].GameData.Period + val
+	if (game.GameData.Period + val) < 0 {
+		return
+	}
+
+  game.GameData.Period = game.GameData.Period + val
+
+	notify("PERIOD", fmt.Sprintf("%d", game.GameData.Period))
 
 } // incrementPeriod
 
-func setPossession(id string, name string) {
+func setPossession(name string) {
 
   if name == HOME {
- 	 	games[id].GameData.Possession = true
+ 	 	
+		game.GameData.Possession = true
+
+		notify("POSSESSION_HOME", "")
+
 	} else {
-		games[id].GameData.Possession = false
+		
+		game.GameData.Possession = false
+
+		notify("POSSESSION_AWAY", "")
+
 	}
 
 } // setPossession
 
-func hose(id string, c *websocket.Conn) {
+func hose(c *websocket.Conn) {
 
   for {
 
 		select {
-		case s := <-games[id].GameData.Clk.OutChan:
+		case s := <-game.GameData.Clk.OutChan:
 		  log.Println(string(s))
 
 		}
@@ -152,11 +228,9 @@ func hose(id string, c *websocket.Conn) {
 
 func controlHandler(w http.ResponseWriter, r *http.Request) {
 
-  vars := mux.Vars(r)
+  /*vars := mux.Vars(r)
 
-	id := vars["id"]
-
-  log.Println("fuck:", id)
+	id := vars["id"]*/
 
   upgrader := websocket.Upgrader {
 		ReadBufferSize:		1024,
@@ -172,6 +246,8 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+
+	control = c
 
 	defer c.Close()
 
@@ -199,26 +275,26 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 		switch req.Cmd {
 		case WS_CLOCK_START:
-			go games[id].GameData.Clk.Start(games[id].Settings)
+			go game.GameData.Clk.Start(game.Settings)
 
-			go hose(id, c)
+			go hose(c)
 
 		case WS_CLOCK_STOP:
-		  games[id].GameData.Clk.Stop()
+		  game.GameData.Clk.Stop()
 
 		case WS_CLOCK_RESET:
 		case WS_SHOT_RESET:
 		case WS_PERIOD_UP:
-			incrementPeriod(id, 1)
+			incrementPeriod(1)
 		
 		case WS_PERIOD_DOWN:
-		  incrementPeriod(id, -1)
+		  incrementPeriod(-1)
 
 		case WS_POSSESSION_HOME:
-			setPossession(id, HOME)
+			setPossession(HOME)
 
 		case WS_POSSESSION_AWAY:
-		  setPossession(id, AWAY)
+		  setPossession(AWAY)
 
 		case WS_FINAL:
 		
@@ -226,37 +302,37 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 		  log.Println(req.Step)
 
-      incrementPoints(id, HOME, req.Step)
+      incrementPoints(HOME, req.Step)
 
     case WS_SCORE_AWAY:
 
 		  log.Println(req.Step)
 
-      incrementPoints(id, AWAY, req.Step)
+      incrementPoints(AWAY, req.Step)
 
 		case WS_FOUL_HOME_UP:
-		  incrementFoul(id, HOME, 1)
+		  incrementFoul(HOME, 1)
 
 		case WS_FOUL_HOME_DOWN:
-			incrementFoul(id, HOME, -1)
+			incrementFoul(HOME, -1)
 		
 		case WS_FOUL_AWAY_UP:
-		  incrementFoul(id, AWAY, 1)
+		  incrementFoul(AWAY, 1)
 
 		case WS_FOUL_AWAY_DOWN:
-			incrementFoul(id, AWAY, -1)
+			incrementFoul(AWAY, -1)
 
 		case WS_TIMEOUT_HOME_UP:
-			incrementTimeout(id, HOME, 1)
+			incrementTimeout(HOME, 1)
 
 		case WS_TIMEOUT_HOME_DOWN:
-			incrementTimeout(id, HOME, -1)
+			incrementTimeout(HOME, -1)
 
 		case WS_TIMEOUT_AWAY_UP:
-			incrementTimeout(id, AWAY, 1)
+			incrementTimeout(AWAY, 1)
 
 		case WS_TIMEOUT_AWAY_DOWN:
-			incrementTimeout(id, AWAY, -1)
+			incrementTimeout(AWAY, -1)
 		
 		default:
 		  log.Printf("[%s][Error] unsupported command: %s", version(), string(msg))

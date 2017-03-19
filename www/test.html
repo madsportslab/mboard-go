@@ -53,9 +53,7 @@
 
       if(xhr.readyState == 4 && xhr.status == 200) {
         
-        var j = JSON.parse(ajax.responseText);
-
-        var ws = new WebSocket("ws://127.0.0.1:8000/ws/games/" + j["gameId"]);
+        var ws = new WebSocket("ws://127.0.0.1:8000/ws/game");
 
         ws.onmessage = function(e) {
 

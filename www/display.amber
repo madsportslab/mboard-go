@@ -1,39 +1,147 @@
 extends layout
 
 block content
+  import menubar.amber
   div.container
     div.row
       div.col-lg-12.col-md-12.col-sm-12.col-xs-12.shade
         center
-          h1.big.green 10:52
-            small.light-blue Q4
+          h1.big.green[id="clock"] 10:52
+            small.light-blue[id="period"] Q4
+            small.green[id="shotClock"] 21
     div.row
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
-        h1.small.light-blue Cavaliers
-          span.fa.fa-facebook
+        h1.small.light-blue[id="homeTeam"] Cavaliers
+          span.fa.fa-facebook[id="homeLogo"]
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
-        h1.small.light-blue.pull-right Warriors
-          span.fa.fa-twitter
+        h1.small.light-blue.pull-right[id="awayTeam"] Warriors
+          span.fa.fa-twitter[id="awayLogo"]
     div.row
       br
-      div.col-lg-5.col-md-5.col-sm-5.col-xs-5.shade
-        h1.big 108
+      div.col-lg-5.col-md-5.col-sm-5.col-xs-5.shade[id="homePos"]
+        h1.big[id="homeScore"] 108
       div.col-lg-2.col-md-2.col-sm-2.col-xs-2
-      div.col-lg-5.col-md-5.col-sm-5.col-xs-5.shade.border2
-        h1.big.pull-right 99
+      div.col-lg-5.col-md-5.col-sm-5.col-xs-5.shade.border2[id="awayPos"]
+        h1.big.pull-right[id="awayScore"] 99
     div.row
       br
-      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6[id="homeTimeouts"]
         span.fa.fa-4x.fa-circle.light-blue
         span.fa.fa-4x.fa-circle.light-blue
         span.fa.fa-4x.fa-circle.light-blue
         span.fa.fa-4x.fa-circle.light-blue
-      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6[id="awayTimeouts"]
         span.fa.fa-4x.fa-circle.light-blue.pull-right
         span.fa.fa-4x.fa-circle.light-blue.pull-right
     div.row
       br
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
-        h1.light-blue.small Fouls to Give: 3
+        h1.green.small[id="homeFoul"] 3
+          small.light-blue Fouls to Give
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
-        h1.light-blue.small.pull-right Fouls to Give: 8
+        h1.green.small.pull-right[id="awayFoul"] 8
+          small.light-blue Fouls to Give
+  script
+    
+    var ws = new WebSocket(GAME_SOCKET);
+
+    ws.onmessage = function(e) {
+
+      var obj = JSON.parse(e.data);
+      console.log(obj);
+
+      if(obj.key == HOME_SCORE) {
+        document.getElementById("homeScore").innerHTML = obj.val.trim();
+      } else if(obj.key == AWAY_SCORE) {
+        document.getElementById("awayScore").innerHTML = obj.val.trim();
+      } else if(obj.key == HOME_TIMEOUT) {
+
+        var ht  = document.getElementById("homeTimeouts");
+        var s   = document.createElement("span");
+        
+        s.className = "fa fa-4x fa-circle light-blue";
+
+        var count = parseInt(obj.val);
+
+        console.log(count);
+
+        while(ht.firstChild) {
+          ht.removeChild(ht.firstChild);
+        }
+
+        for(var j = 0; j < count; j++) {
+          
+          var x = s.cloneNode(true);
+          ht.appendChild(x);
+
+        }
+
+      } else if(obj.key == AWAY_TIMEOUT) {
+        
+        var at  = document.getElementById("awayTimeouts");
+        var s   = document.createElement("span");
+        
+        s.className = "fa fa-4x fa-circle light-blue pull-right";
+
+        var count = parseInt(obj.val);
+
+        console.log(count);
+
+        while(at.firstChild) {
+          at.removeChild(at.firstChild);
+        }
+
+        for(var j = 0; j < count; j++) {
+          
+          var x = s.cloneNode(true);
+          at.appendChild(x);
+
+        }
+
+      } else if(obj.key == HOME_FOUL) {
+
+        var small = document.createElement("small");
+        var text  = document.createTextNode(FOULS_TO_GIVE);
+        
+        small.className = "light-blue";
+        small.appendChild(text);
+        
+        var hf = document.getElementById("homeFoul");
+        
+        hf.innerHTML = obj.val + " ";
+        hf.appendChild(small);
+
+
+      } else if(obj.key == AWAY_FOUL) {
+        
+        var small = document.createElement("small");
+        var text  = document.createTextNode(FOULS_TO_GIVE);
+
+        small.className = "light-blue";
+        small.appendChild(text);
+
+        var af = document.getElementById("awayFoul");
+        
+        af.innerHTML = obj.val + " ";
+        af.appendChild(small);
+
+      } else if(obj.key == CLOCK) {
+        
+      } else if(obj.key == POSSESSION_HOME) {
+        
+        document.getElementById("homePos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade border2";
+        document.getElementById("awayPos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade";
+
+      } else if(obj.key == POSSESSION_AWAY) {
+        
+        document.getElementById("awayPos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade border2";
+
+        document.getElementById("homePos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade";
+
+      }
+      
+    }
+
+    ws.onclose = function(e) {
+
+    }

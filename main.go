@@ -40,7 +40,8 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/display", displayHandler)
 	router.HandleFunc("/test", testHandler)
 
-	router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)
+	//router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)
+  router.HandleFunc("/ws/game", controlHandler)
 
   return router
 

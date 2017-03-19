@@ -4,14 +4,14 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
   "log"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
+	//"github.com/gorilla/mux"
 )
 
 const (
@@ -39,11 +39,11 @@ type GameInfo struct {
 	GameData			*Game
 }
 
-type PostRes struct {
+type GameRes struct {
 	GameId 	string 	`json:"gameId"`
 }
 
-var games = make(map[string]*GameInfo)
+var game *GameInfo
 
 func parseConfig(r *http.Request) *Config {
 
@@ -160,19 +160,21 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 		log.Println(config)
 
+		/*
 		gid := generateId(config, 10)
 
 		log.Println(gid)
 
-    ps := PostRes{
+    gr := GameRes{
 			GameId: gid,
 		}
 		
-		j, err := json.Marshal(ps)
+		j, err := json.Marshal(gr)
 
 		if err != nil {
 			log.Println(err)
 		}
+    */
 
 		h := initTeam(config.Home)
 		a := initTeam(config.Away)
@@ -188,33 +190,54 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 
-    games[gid] = &gi
+    game = &gi
 
-		w.Write(j)
+		w.Write([]byte("SUCCESS"))
 
 	case http.MethodGet:
 
+		/*
 		vars := mux.Vars(r)
 
 		id := vars["id"]
 
-		log.Printf("[%s] GET /games/%s", version(), id)
+		if id != nil {
 
-		gameInfo := games[id]
+			log.Printf("[%s] GET /games/%s", version(), id)
 
-		if gameInfo == nil {
-			w.WriteHeader(http.StatusNotFound)
+			gameInfo := games[id]
+
+			if gameInfo == nil {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+
+				j, jsonErr := json.Marshal(gameInfo.Settings)
+
+				if jsonErr != nil {
+					log.Println(jsonErr)
+				}
+
+				w.Write(j)
+
+			}
+			
 		} else {
 
-			j, jsonErr := json.Marshal(gameInfo.Settings)
+			if control != nil {
 
-			if jsonErr != nil {
-				log.Println(jsonErr)
+				gr := GameRes{
+					gameId:
+				}
+
+
 			}
 
-			w.Write(j)
 
 		}
+		*/
+
+
+
 	  
 	case http.MethodPut:
 	case http.MethodDelete:

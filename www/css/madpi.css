@@ -4,6 +4,7 @@ html {
   font-family: sans-serif;
   font-weight: 200;
   height: 100%;
+  
 }
 
 body {
@@ -11,6 +12,7 @@ body {
   background: -moz-linear-gradient( top, #204060, #005994 );
   height: 100%;
   color: #ffffff;
+  letter-spacing: 2px;
 }
 
 a, a:visited, a:hover, a:link {
@@ -27,6 +29,13 @@ small {
 }
 
 /* custom classes */
+
+.logo {
+  text-align: center;
+  z-index: -1;
+  opacity: .3;
+  color: #ffffff;
+}
 
 .big {
   font-size: 20em;
@@ -49,7 +58,7 @@ small {
 }
 
 .red {
-  color: #dd0000;
+  color: #aa0000;
 }
 
 .blue {
@@ -79,4 +88,8 @@ small {
 
 .container {
   width: 1440px;
+}
+
+.navbar {
+  opacity: .3;
 }
