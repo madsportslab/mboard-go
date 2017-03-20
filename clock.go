@@ -24,25 +24,24 @@ type GameClocks struct {
 type ReadableClock struct {
 	GameClock		*Clock		`json:"game"`
 	ShotClock   *Clock		`json:"shot"`
+	Minutes     int				`json:"minutes"`
+	Shot        int				`json:"shotclock"`
 }
 
 func (gc *GameClocks) Run(settings *Config) {
 
 	for _ = range gc.Ticker.C {
 
-		//log.Println(t)
-
-		gc.PlayClock.Seconds++
-		gc.ShotClock.Seconds++
-	
 		if gc.PlayClock.Tenths == 9 {
 			gc.PlayClock.Tenths = 0
+			gc.PlayClock.Seconds++
 		} else {
 			gc.PlayClock.Tenths++
 		}
 
 		if gc.ShotClock.Tenths == 9 {
 			gc.ShotClock.Tenths = 0
+			gc.ShotClock.Seconds++
 		} else {
 			gc.ShotClock.Tenths++
 		}
@@ -59,6 +58,8 @@ func (gc *GameClocks) Run(settings *Config) {
 		rc := ReadableClock{
 			ShotClock: gc.ShotClock,
 			GameClock: gc.PlayClock,
+			Minutes: settings.Minutes,
+			Shot: settings.Shot,
 		}
 
 		j, jsonErr := json.Marshal(rc)

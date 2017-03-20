@@ -17,19 +17,26 @@ function calcScore(data) {
 
 function gameClockToString(c, mins) {
 
-  return "shit";
+  var delta = mins * 60 - c.seconds;
 
+  var seconds = delta % 60;
+  var minutes = Math.floor(delta/60);
+  
+  if(minutes < 0) {
+    return seconds + "." + tenths;
+  } else if(seconds < 10) {
+    return minutes + ":0" + seconds;
+  } else {
+    return minutes + ":" + seconds;
+  }
   
 } // gameClockToString
 
 
-function shotClockToString(c, seconds) {
+function shotClockToString(c, secs) {
 
-  console.log(c.seconds);
-  console.log(c.tenths);
+  return secs - c.seconds;
   
-  return "fag";
-
 } // shotClockToString
 
 
@@ -132,10 +139,10 @@ function updatePeriod(val) {
 } // updatePeriod
 
 
-function updateClock(obj) {
+function updateClock(game, shot, mins, secs) {
 
-  document.getElementById("shotClock").innerHTML = shotClockToString(obj.shot);
-  document.getElementById("gameClock").innerHTML = gameClockToString(obj.game);
+  document.getElementById("shotClock").innerHTML = shotClockToString(shot, secs);
+  document.getElementById("gameClock").innerHTML = gameClockToString(game, mins);
 
 } // updateClock
 
@@ -166,7 +173,7 @@ function updateDisplay(data) {
   updateTeam(HOME, j.home);
   updateTeam(AWAY, j.away);
   
-  updateClock(j);
+  updateClock(j.game, j.shot, j.settings.minutes, j.settings.shot);
 
   updateScore(HOME, calcScore(j.home.points));
   updateScore(AWAY, calcScore(j.away.points));

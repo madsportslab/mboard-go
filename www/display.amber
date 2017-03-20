@@ -74,7 +74,10 @@ block content
           } else if(obj.key == AWAY_FOUL) {
             updateFouls(AWAY, obj.val);
           } else if(obj.key == CLOCK) {
-            updateClock(obj.val);
+
+            var j = JSON.parse(obj.val);
+
+            updateClock(j.game, j.shot, j.minutes, j.shotclock);
           } else if(obj.key == POSSESSION_HOME) {
             updatePossession(HOME);
           } else if(obj.key == POSSESSION_AWAY) {
