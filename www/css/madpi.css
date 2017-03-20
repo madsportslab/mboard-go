@@ -28,6 +28,10 @@ small {
   color: #538cc6;
 }
 
+h1 small {
+  font-weight: 200;
+}
+
 /* custom classes */
 
 .logo {
@@ -92,4 +96,5 @@ small {
 
 .navbar {
   opacity: .3;
+  letter-spacing: 0px;
 }

@@ -4,7 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	//"encoding/json"
+	"encoding/json"
 	"fmt"
   "log"
 	"net/http"
@@ -37,6 +37,16 @@ type Config struct {
 type GameInfo struct {
   Settings			*Config
 	GameData			*Game
+}
+
+type GameState struct {
+	Settings      *Config   `json:"settings"`
+	Period        int				`json:"period"`
+	Possession    bool			`json:"possession"`
+	Home          *Team			`json:"home"`
+	Away          *Team			`json:"away"`
+	GameClock     *Clock    `json:"game"`
+	ShotClock     *Clock    `json:"shot"`
 }
 
 type GameRes struct {
@@ -110,11 +120,12 @@ func parseConfig(r *http.Request) *Config {
 		
 } // parseConfig
 
-func initTeam(name string) *Team {
+func initTeam(name string, timeouts int) *Team {
 
   team := Team{
 		Name: name,
 		Points: make(map[int]int),
+		Timeouts: timeouts,
 	}
 
   return &team
@@ -127,7 +138,7 @@ func initGameClocks() *GameClocks {
 		ShotViolationChan: make(chan bool),
 		FinalChan: make(chan bool),
 		OutChan: make(chan []byte),
-		PlayClock: &Clock{Tenths: 0, Seconds: 0, Minutes: 0},
+		PlayClock: &Clock{Tenths: 0, Seconds: 0},
 		ShotClock: &Clock{Tenths: 0, Seconds: 0},
 	}
 
@@ -159,8 +170,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
     config := parseConfig(r)
 
 		log.Println(config)
-
-		/*
+/*
 		gid := generateId(config, 10)
 
 		log.Println(gid)
@@ -174,10 +184,9 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-    */
-
-		h := initTeam(config.Home)
-		a := initTeam(config.Away)
+*/
+		h := initTeam(config.Home, config.Timeouts)
+		a := initTeam(config.Away, config.Timeouts)
 
 		c := initGameClocks()
 
@@ -196,48 +205,27 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodGet:
 
-		/*
-		vars := mux.Vars(r)
+		if game != nil {
 
-		id := vars["id"]
-
-		if id != nil {
-
-			log.Printf("[%s] GET /games/%s", version(), id)
-
-			gameInfo := games[id]
-
-			if gameInfo == nil {
-				w.WriteHeader(http.StatusNotFound)
-			} else {
-
-				j, jsonErr := json.Marshal(gameInfo.Settings)
-
-				if jsonErr != nil {
-					log.Println(jsonErr)
-				}
-
-				w.Write(j)
-
-			}
-			
-		} else {
-
-			if control != nil {
-
-				gr := GameRes{
-					gameId:
-				}
-
-
+			gs := GameState{
+				Settings: game.Settings,
+				Period: game.GameData.Period,
+				Possession: game.GameData.Possession,
+				Home: game.GameData.Home,
+				Away: game.GameData.Away,
+				GameClock: game.GameData.Clk.PlayClock,
+				ShotClock: game.GameData.Clk.ShotClock,
 			}
 
+			j, jsonErr := json.Marshal(gs)
+
+			if jsonErr != nil {
+				log.Println(jsonErr)
+			}
+
+			w.Write(j)
 
 		}
-		*/
-
-
-
 	  
 	case http.MethodPut:
 	case http.MethodDelete:

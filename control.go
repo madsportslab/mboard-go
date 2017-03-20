@@ -49,7 +49,6 @@ type Game struct {
 	Period    	int						`json:"period"`
 	Clk					*GameClocks		`json:"clk"`
 	Possession 	bool					`json:"possesion"`
-	//Feed        chan          `json:"feed"`
 }
 
 type Notification struct {
@@ -62,7 +61,7 @@ type Req struct {
 	Step				int					`json:"step"`        
 }
 
-var control *websocket.Conn
+var connections = make(map[*websocket.Conn]bool)
 
 func notify(key string, val string) {
 
@@ -77,7 +76,11 @@ func notify(key string, val string) {
 		log.Println(jsonErr)
 	}
 
-	control.WriteMessage(websocket.TextMessage, j)
+	for c := range connections {
+		log.Println(c)
+		c.WriteMessage(websocket.TextMessage, j)
+	}
+
 
 } // notify
 
@@ -125,25 +128,23 @@ func incrementFoul(name string, val int) {
 
   if name == HOME {
 
-		if (game.Settings.Fouls - (game.GameData.Home.Fouls + val) < 0) ||
-		  (game.GameData.Home.Fouls + val < 0) {
+		if game.GameData.Home.Fouls + val < 0 {
 			return
 		}
 
 		game.GameData.Home.Fouls = game.GameData.Home.Fouls + val
 		
-		notify("HOME_FOUL", fmt.Sprintf("%d", (game.Settings.Fouls - game.GameData.Home.Fouls)))
+		notify("HOME_FOUL", fmt.Sprintf("%d", game.GameData.Home.Fouls))
 
 	} else if name == AWAY {
 
-		if (game.Settings.Fouls - (game.GameData.Away.Fouls + val) < 0) ||
-		  (game.GameData.Away.Fouls + val < 0) {
+		if game.GameData.Away.Fouls + val < 0  {
 			return
 		}
 
 		game.GameData.Away.Fouls = game.GameData.Away.Fouls + val
 
-		notify("AWAY_FOUL", fmt.Sprintf("%d", (game.Settings.Fouls - game.GameData.Away.Fouls)))
+		notify("AWAY_FOUL", fmt.Sprintf("%d", game.GameData.Away.Fouls))
 
 	}
 
@@ -164,7 +165,7 @@ func incrementTimeout(name string, val int) {
 
 		game.GameData.Home.Timeouts = game.GameData.Home.Timeouts + val
 
-		notify("HOME_TIMEOUT", fmt.Sprintf("%d", (game.Settings.Timeouts - game.GameData.Home.Timeouts)))
+		notify("HOME_TIMEOUT", fmt.Sprintf("%d", game.GameData.Home.Timeouts))
 		
 	} else if name == AWAY {
 
@@ -175,12 +176,11 @@ func incrementTimeout(name string, val int) {
 
 		game.GameData.Away.Timeouts = game.GameData.Away.Timeouts + val
 
-		notify("AWAY_TIMEOUT", fmt.Sprintf("%d", (game.Settings.Timeouts - game.GameData.Away.Timeouts)))
+		notify("AWAY_TIMEOUT", fmt.Sprintf("%d", game.GameData.Away.Timeouts))
 
 	}
 
 } // incrementTimeout
-
 
 func incrementPeriod(val int) {
 
@@ -218,8 +218,7 @@ func hose(c *websocket.Conn) {
 
 		select {
 		case s := <-game.GameData.Clk.OutChan:
-		  log.Println(string(s))
-
+		  notify("CLOCK", string(s))
 		}
 
 	}
@@ -247,7 +246,9 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	control = c
+	connections[c] = true
+
+	log.Println("connection #:", len(connections))
 
 	defer c.Close()
 
@@ -323,16 +324,16 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 			incrementFoul(AWAY, -1)
 
 		case WS_TIMEOUT_HOME_UP:
-			incrementTimeout(HOME, 1)
-
-		case WS_TIMEOUT_HOME_DOWN:
 			incrementTimeout(HOME, -1)
 
+		case WS_TIMEOUT_HOME_DOWN:
+			incrementTimeout(HOME, 1)
+
 		case WS_TIMEOUT_AWAY_UP:
-			incrementTimeout(AWAY, 1)
+			incrementTimeout(AWAY, -1)
 
 		case WS_TIMEOUT_AWAY_DOWN:
-			incrementTimeout(AWAY, -1)
+			incrementTimeout(AWAY, 1)
 		
 		default:
 		  log.Printf("[%s][Error] unsupported command: %s", version(), string(msg))

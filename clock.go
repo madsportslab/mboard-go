@@ -9,7 +9,7 @@ import (
 type Clock struct {
 	Tenths			int		`json:"tenths"`
 	Seconds 		int		`json:"seconds"`
-	Minutes     int		`json:"minutes"`
+	//Minutes     int		`json:"minutes"`
 }
 
 type GameClocks struct {
@@ -21,43 +21,33 @@ type GameClocks struct {
 	ShotClock         *Clock
 }
 
+type ReadableClock struct {
+	GameClock		*Clock		`json:"game"`
+	ShotClock   *Clock		`json:"shot"`
+}
+
 func (gc *GameClocks) Run(settings *Config) {
 
-	for t := range gc.Ticker.C {
+	for _ = range gc.Ticker.C {
 
-		if gc.ShotClock.Tenths == 9 {
-		
-			gc.ShotClock.Tenths = 0
-			gc.ShotClock.Seconds++
-		
-		} else {
-			gc.ShotClock.Tenths++
-		}
+		//log.Println(t)
 
+		gc.PlayClock.Seconds++
+		gc.ShotClock.Seconds++
+	
 		if gc.PlayClock.Tenths == 9 {
-
-			if gc.PlayClock.Seconds == 59 {
-			
-				gc.PlayClock.Minutes++
-				gc.PlayClock.Seconds = 0
-			
-			} else {
-				gc.PlayClock.Seconds++
-			}
-
 			gc.PlayClock.Tenths = 0
-
 		} else {
 			gc.PlayClock.Tenths++
 		}
 
-		log.Println(gc.PlayClock.Minutes, gc.PlayClock.Seconds,
-			gc.PlayClock.Tenths, t)
+		if gc.ShotClock.Tenths == 9 {
+			gc.ShotClock.Tenths = 0
+		} else {
+			gc.ShotClock.Tenths++
+		}
 
-		log.Println(gc.ShotClock.Seconds,
-			gc.ShotClock.Tenths, t)
-
-		if gc.PlayClock.Minutes == settings.Minutes {
+		if gc.PlayClock.Seconds == settings.Minutes * 60 {
 			gc.Ticker.Stop()
 			gc.FinalChan <- true
 		}
@@ -66,14 +56,19 @@ func (gc *GameClocks) Run(settings *Config) {
 			gc.ShotViolationChan <- true
 		}
 
-		j, jsonErr := json.Marshal(gc.PlayClock)
+		rc := ReadableClock{
+			ShotClock: gc.ShotClock,
+			GameClock: gc.PlayClock,
+		}
+
+		j, jsonErr := json.Marshal(rc)
 
 		if jsonErr != nil {
 			log.Println("[Error]", jsonErr)
 		}
 
 		gc.OutChan <- j
-
+		
 	}
 
 } // Run
@@ -125,77 +120,43 @@ func (gc *GameClocks) GameClockReset() {
 		gc.Ticker.Stop()
 	}
 
-	gc.PlayClock.Minutes 	= 0
 	gc.PlayClock.Seconds 	= 0
 	gc.PlayClock.Tenths 	= 0
 
 } // GameClockReset
 
-func (gc *GameClocks) Rew(ticks int) {
-
-	if ticks < 0 {
-		return
-	}
+func (gc *GameClocks) stepGameClock(settings *Config, ticks int) {
 
 	if gc.Ticker != nil {
 		gc.Ticker.Stop()
 	}
 
-	if gc.PlayClock.Seconds == 0 && gc.PlayClock.Minutes == 0 {
-		return
+	total := gc.PlayClock.Seconds + ticks
+
+	if total >= 0 && total < settings.Minutes * 60 {
+		gc.PlayClock.Seconds = total
 	}
 
-	var delta = gc.PlayClock.Seconds - ticks
-
-	if delta >= 0 {
-		gc.PlayClock.Seconds = delta
-	} else {
-		
-		gc.PlayClock.Seconds = 60 + delta
-		
-		if gc.PlayClock.Minutes > 0 {
-			gc.PlayClock.Minutes--
-		}
-
+	if total == settings.Minutes * 60 {
+		gc.FinalChan <- true
 	}
 
-	var sdelta = gc.ShotClock.Seconds - ticks
+} // stepGameClock
 
-	if sdelta >= 0 && sdelta < 24 {
-		gc.ShotClock.Seconds = sdelta
-	} else {
-		gc.ShotViolationChan <- true
-	}
-
-} // Rew
-
-func (gc *GameClocks) Fwd(ticks int) {
-
-	if ticks < 0 {
-		return
-	}
+func (gc *GameClocks) stepShotClock(settings *Config, ticks int) {
 
 	if gc.Ticker != nil {
 		gc.Ticker.Stop()
 	}
 
-	var sum = gc.PlayClock.Seconds + ticks
+  total := gc.ShotClock.Seconds + ticks
 
-	if sum > 59 {
-
-		gc.PlayClock.Minutes++
-		gc.PlayClock.Seconds = sum - 60
-
-	} else {
-		gc.PlayClock.Seconds = gc.PlayClock.Seconds + ticks
+	if total >= 0 && total < settings.Shot {
+		gc.ShotClock.Seconds = total
 	}
 
-	var ssum = gc.ShotClock.Seconds + ticks
-
-	if ssum >= 0 && ssum < 24 {
-		gc.ShotClock.Seconds = ssum
-	} else {
+	if gc.ShotClock.Seconds == settings.Shot {
 		gc.ShotViolationChan <- true
 	}
 
-} // Fwd
+} // stepShotClock

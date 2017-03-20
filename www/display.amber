@@ -4,11 +4,14 @@ block content
   import menubar.amber
   div.container
     div.row
-      div.col-lg-12.col-md-12.col-sm-12.col-xs-12.shade
-        center
-          h1.big.green[id="clock"] 10:52
-            small.light-blue[id="period"] Q4
-            small.green[id="shotClock"] 21
+      div.col-lg-7.col-md-7.col-sm-7.col-xs-7.shade
+        h1.big.green.pull-right[id="gameClock"] 10:52
+      div.col-lg-3.col-md-3.col-sm-3.col-xs-3.shade
+        h1.big.pull-left
+          small.light-blue[id="period"] 1st
+      div.col-lg-2.col-md-2.col-sm-2.col-xs-2.shade
+        h1.big.pull-left
+          small.green[id="shotClock"] 21
     div.row
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
         h1.small.light-blue[id="homeTeam"] Cavaliers
@@ -37,111 +40,58 @@ block content
       br
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
         h1.green.small[id="homeFoul"] 3
-          small.light-blue Fouls to Give
+          small.light-blue Fouls
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
-        h1.green.small.pull-right[id="awayFoul"] 8
-          small.light-blue Fouls to Give
+        h1.small.green.pull-right[id="awayFoul"] 8
+          small.light-blue Fouls
   script
     
-    var ws = new WebSocket(GAME_SOCKET);
+    var http = new XMLHttpRequest();
 
-    ws.onmessage = function(e) {
+    http.onreadystatechange = function() {
 
-      var obj = JSON.parse(e.data);
-      console.log(obj);
+      if(http.readyState == 4 && http.status == 200) {
 
-      if(obj.key == HOME_SCORE) {
-        document.getElementById("homeScore").innerHTML = obj.val.trim();
-      } else if(obj.key == AWAY_SCORE) {
-        document.getElementById("awayScore").innerHTML = obj.val.trim();
-      } else if(obj.key == HOME_TIMEOUT) {
+        updateDisplay(http.responseText);
 
-        var ht  = document.getElementById("homeTimeouts");
-        var s   = document.createElement("span");
-        
-        s.className = "fa fa-4x fa-circle light-blue";
+        var ws = new WebSocket(GAME_SOCKET);
 
-        var count = parseInt(obj.val);
+        ws.onmessage = function(e) {
 
-        console.log(count);
+          var obj = JSON.parse(e.data);
+          console.log(obj);
 
-        while(ht.firstChild) {
-          ht.removeChild(ht.firstChild);
-        }
-
-        for(var j = 0; j < count; j++) {
+          if(obj.key == HOME_SCORE) {
+            updateScore(HOME, obj.val);
+          } else if(obj.key == AWAY_SCORE) {
+            updateScore(AWAY, obj.val);
+          } else if(obj.key == HOME_TIMEOUT) {
+            updateTimeouts(HOME, obj.val);
+          } else if(obj.key == AWAY_TIMEOUT) {
+            updateTimeouts(AWAY, obj.val);
+          } else if(obj.key == HOME_FOUL) {
+            updateFouls(HOME, obj.val);
+          } else if(obj.key == AWAY_FOUL) {
+            updateFouls(AWAY, obj.val);
+          } else if(obj.key == CLOCK) {
+            updateClock(obj.val);
+          } else if(obj.key == POSSESSION_HOME) {
+            updatePossession(HOME);
+          } else if(obj.key == POSSESSION_AWAY) {
+            updatePossession(AWAY);
+          } else if(obj.key == PERIOD) {
+            updatePeriod(obj.val);
+          }
           
-          var x = s.cloneNode(true);
-          ht.appendChild(x);
-
         }
 
-      } else if(obj.key == AWAY_TIMEOUT) {
-        
-        var at  = document.getElementById("awayTimeouts");
-        var s   = document.createElement("span");
-        
-        s.className = "fa fa-4x fa-circle light-blue pull-right";
-
-        var count = parseInt(obj.val);
-
-        console.log(count);
-
-        while(at.firstChild) {
-          at.removeChild(at.firstChild);
+        ws.onclose = function(e) {
+          alert("FUCKING BUTT SLAMMED");
         }
-
-        for(var j = 0; j < count; j++) {
-          
-          var x = s.cloneNode(true);
-          at.appendChild(x);
-
-        }
-
-      } else if(obj.key == HOME_FOUL) {
-
-        var small = document.createElement("small");
-        var text  = document.createTextNode(FOULS_TO_GIVE);
         
-        small.className = "light-blue";
-        small.appendChild(text);
-        
-        var hf = document.getElementById("homeFoul");
-        
-        hf.innerHTML = obj.val + " ";
-        hf.appendChild(small);
-
-
-      } else if(obj.key == AWAY_FOUL) {
-        
-        var small = document.createElement("small");
-        var text  = document.createTextNode(FOULS_TO_GIVE);
-
-        small.className = "light-blue";
-        small.appendChild(text);
-
-        var af = document.getElementById("awayFoul");
-        
-        af.innerHTML = obj.val + " ";
-        af.appendChild(small);
-
-      } else if(obj.key == CLOCK) {
-        
-      } else if(obj.key == POSSESSION_HOME) {
-        
-        document.getElementById("homePos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade border2";
-        document.getElementById("awayPos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade";
-
-      } else if(obj.key == POSSESSION_AWAY) {
-        
-        document.getElementById("awayPos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade border2";
-
-        document.getElementById("homePos").className = "col-lg-5 col-md-5 col-sm-5 col-xs-5 shade";
-
       }
-      
-    }
-
-    ws.onclose = function(e) {
 
     }
+
+    http.open("GET", GAME, true);
+    http.send();
