@@ -22,8 +22,8 @@ function gameClockToString(c, mins) {
   var seconds = delta % 60;
   var minutes = Math.floor(delta/60);
   
-  if(minutes < 0) {
-    return seconds + "." + tenths;
+  if(minutes == 0) {
+    return seconds + "." + c.tenths;
   } else if(seconds < 10) {
     return minutes + ":0" + seconds;
   } else {

@@ -77,7 +77,6 @@ func notify(key string, val string) {
 	}
 
 	for c := range connections {
-		log.Println(c)
 		c.WriteMessage(websocket.TextMessage, j)
 	}
 
