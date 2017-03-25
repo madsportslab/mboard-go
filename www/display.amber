@@ -4,12 +4,12 @@ block content
   import menubar.amber
   div.container
     div.row
-      div.col-lg-7.col-md-7.col-sm-7.col-xs-7.shade
+      div.col-lg-6.col-md-6.col-sm-6.col-xs-6.shade
         h1.big.green.pull-right[id="gameClock"] 10:52
       div.col-lg-3.col-md-3.col-sm-3.col-xs-3.shade
         h1.big.pull-left
           small.light-blue[id="period"] 1st
-      div.col-lg-2.col-md-2.col-sm-2.col-xs-2.shade
+      div.col-lg-3.col-md-3.col-sm-3.col-xs-3.shade
         h1.big.pull-left
           small.green[id="shotClock"] 21
     div.row
@@ -28,22 +28,23 @@ block content
         h1.big.pull-right[id="awayScore"] 99
     div.row
       br
-      div.col-lg-6.col-md-6.col-sm-6.col-xs-6[id="homeTimeouts"]
-        span.fa.fa-4x.fa-circle.light-blue
-        span.fa.fa-4x.fa-circle.light-blue
-        span.fa.fa-4x.fa-circle.light-blue
-        span.fa.fa-4x.fa-circle.light-blue
-      div.col-lg-6.col-md-6.col-sm-6.col-xs-6[id="awayTimeouts"]
-        span.fa.fa-4x.fa-circle.light-blue.pull-right
-        span.fa.fa-4x.fa-circle.light-blue.pull-right
-    div.row
-      br
-      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
-        h1.green.small[id="homeFoul"] 3
-          small.light-blue Fouls
-      div.col-lg-6.col-md-6.col-sm-6.col-xs-6
-        h1.small.green.pull-right[id="awayFoul"] 8
-          small.light-blue Fouls
+      div.col-lg-3.col-md-3.col-sm-3.col-xs-3
+        h5.green.small[id="homeFoul"] 3
+          spanlight-blue Fouls
+      div.col-lg-2.col-md-2.col-sm-2.col-xs-2[id="homeTimeouts"]
+        h5
+          span.fa.fa-5x.fa-circle.light-blue.pull-right
+          span.fa.fa-5x.fa-circle.light-blue.pull-right
+          span.fa.fa-5x.fa-circle.light-blue.pull-right
+          span.fa.fa-5x.fa-circle.light-blue.pull-right
+      div.col-lg-2.col-md-2.col-sm-2.col-xs-2
+      div.col-lg-2.col-md-2.col-sm-2.col-xs-2[id="awayTimeouts"]
+        h5
+          span.fa.fa-5x.fa-circle.light-blue.pull-left
+          span.fa.fa-5x.fa-circle.light-blue.pull-left  
+      div.col-lg-3.col-md-3.col-sm-3.col-xs-3
+        h5.small.green.pull-right[id="awayFoul"] 8
+          span.light-blue Fouls
   script
     
     var http = new XMLHttpRequest();
@@ -78,6 +79,7 @@ block content
             var j = JSON.parse(obj.val);
 
             updateClock(j.game, j.shot, j.minutes, j.shotclock);
+            
           } else if(obj.key == POSSESSION_HOME) {
             updatePossession(HOME);
           } else if(obj.key == POSSESSION_AWAY) {
@@ -89,7 +91,7 @@ block content
         }
 
         ws.onclose = function(e) {
-          alert("FUCKING BUTT SLAMMED");
+          //alert("FUCKING BUTT SLAMMED");
         }
         
       }

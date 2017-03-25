@@ -11,6 +11,14 @@
   <h1 id="clock">0</h1>
   <button id="start">Start</button>
   <button id="stop">Stop</button>
+  <button id="clock_reset">Game Clock Reset</button>
+  <button id="shot_reset">Shot Clock Reset</button>
+  <br>
+  <button id="clock_step_fwd">Game Clock Step Fwd</button>
+  <button id="clock_step_rew">Game Clock Step Rew</button>
+  <br>
+  <button id="shot_step_fwd">Shot Clock Step Fwd</button>
+  <button id="shot_step_rew">Shot Clock Step Rew</button>
   <br>
   <button id="period">+Period</button>
   <button id="noperiod">-Period</button>
@@ -73,7 +81,37 @@
           return false;
         }
         
-                document.getElementById("period").onclick = function(e) {
+        document.getElementById("clock_reset").onclick = function(e) {
+          ws.send(JSON.stringify({cmd: "CLOCK_RESET"}));
+          return false;
+        }
+        
+        document.getElementById("shot_reset").onclick = function(e) {
+          ws.send(JSON.stringify({cmd: "SHOT_RESET"}));
+          return false;
+        }
+
+        document.getElementById("clock_step_fwd").onclick = function(e) {
+          ws.send(JSON.stringify({cmd: "CLOCK_STEP", step: -1}));
+          return false;
+        }
+
+        document.getElementById("clock_step_rew").onclick = function(e) {
+          ws.send(JSON.stringify({cmd: "CLOCK_STEP", step: 1}));
+          return false;
+        }
+
+        document.getElementById("shot_step_fwd").onclick = function(e) {
+          ws.send(JSON.stringify({cmd: "SHOT_STEP", step: -1}));
+          return false;
+        }
+
+        document.getElementById("shot_step_rew").onclick = function(e) {
+          ws.send(JSON.stringify({cmd: "SHOT_STEP", step: 1}));
+          return false;
+        }
+
+        document.getElementById("period").onclick = function(e) {
           ws.send(JSON.stringify({cmd: "PERIOD_UP"}));
           return false;
         }

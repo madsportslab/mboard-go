@@ -28,7 +28,26 @@ type ReadableClock struct {
 	Shot        int				`json:"shotclock"`
 }
 
-func (gc *GameClocks) Run(settings *Config) {
+func (gc *GameClocks) ClockOut() {
+
+  rc := ReadableClock{
+		ShotClock: gc.ShotClock,
+		GameClock: gc.PlayClock,
+		Minutes: game.Settings.Minutes,
+		Shot: game.Settings.Shot,
+	}
+
+	j, jsonErr := json.Marshal(rc)
+
+	if jsonErr != nil {
+		log.Println("[Error]", jsonErr)
+	}
+
+	gc.OutChan <- j
+	
+} // ClockOut
+
+func (gc *GameClocks) Run() {
 
 	for _ = range gc.Ticker.C {
 
@@ -46,35 +65,22 @@ func (gc *GameClocks) Run(settings *Config) {
 			gc.ShotClock.Tenths++
 		}
 
-		if gc.PlayClock.Seconds == settings.Minutes * 60 {
+		if gc.PlayClock.Seconds == game.Settings.Minutes * 60 {
 			gc.Ticker.Stop()
 			gc.FinalChan <- true
 		}
 
-		if gc.ShotClock.Seconds == settings.Shot {
+		if gc.ShotClock.Seconds == game.Settings.Shot {
 			gc.ShotViolationChan <- true
 		}
 
-		rc := ReadableClock{
-			ShotClock: gc.ShotClock,
-			GameClock: gc.PlayClock,
-			Minutes: settings.Minutes,
-			Shot: settings.Shot,
-		}
-
-		j, jsonErr := json.Marshal(rc)
-
-		if jsonErr != nil {
-			log.Println("[Error]", jsonErr)
-		}
-
-		gc.OutChan <- j
+		gc.ClockOut();
 		
 	}
 
 } // Run
 
-func (gc *GameClocks) Start(settings *Config) {
+func (gc *GameClocks) Start() {
 
 	//TODO: prevent multiple starts
 	if gc.Ticker != nil {
@@ -83,7 +89,7 @@ func (gc *GameClocks) Start(settings *Config) {
 
 	gc.Ticker = time.NewTicker(time.Millisecond * 100)
 
-	go gc.Run(settings)
+	go gc.Run()
 
 	for {
 		select {
@@ -111,6 +117,8 @@ func (gc *GameClocks) ShotClockReset() {
 		gc.ShotClock.Seconds 	= 0
 		gc.ShotClock.Tenths 	= 0
 	
+		gc.ClockOut()
+
 	}
 
 } // ShotClockReset
@@ -124,9 +132,11 @@ func (gc *GameClocks) GameClockReset() {
 	gc.PlayClock.Seconds 	= 0
 	gc.PlayClock.Tenths 	= 0
 
+	gc.ClockOut()
+
 } // GameClockReset
 
-func (gc *GameClocks) stepGameClock(settings *Config, ticks int) {
+func (gc *GameClocks) StepGameClock(ticks int) {
 
 	if gc.Ticker != nil {
 		gc.Ticker.Stop()
@@ -134,17 +144,19 @@ func (gc *GameClocks) stepGameClock(settings *Config, ticks int) {
 
 	total := gc.PlayClock.Seconds + ticks
 
-	if total >= 0 && total < settings.Minutes * 60 {
+	if total >= 0 && total <= game.Settings.Minutes * 60 {
 		gc.PlayClock.Seconds = total
 	}
 
-	if total == settings.Minutes * 60 {
+	if total == game.Settings.Minutes * 60 {
 		gc.FinalChan <- true
 	}
 
-} // stepGameClock
+  gc.ClockOut()
 
-func (gc *GameClocks) stepShotClock(settings *Config, ticks int) {
+} // StepGameClock
+
+func (gc *GameClocks) StepShotClock(ticks int) {
 
 	if gc.Ticker != nil {
 		gc.Ticker.Stop()
@@ -152,12 +164,14 @@ func (gc *GameClocks) stepShotClock(settings *Config, ticks int) {
 
   total := gc.ShotClock.Seconds + ticks
 
-	if total >= 0 && total < settings.Shot {
+	if total >= 0 && total <= game.Settings.Shot {
 		gc.ShotClock.Seconds = total
 	}
 
-	if gc.ShotClock.Seconds == settings.Shot {
+	if gc.ShotClock.Seconds == game.Settings.Shot {
 		gc.ShotViolationChan <- true
 	}
 
-} // stepShotClock
+	gc.ClockOut()
+
+} // StepShotClock

@@ -17,19 +17,46 @@ function calcScore(data) {
 
 function gameClockToString(c, mins) {
 
-  var delta = mins * 60 - c.seconds;
-
+  var delta   = mins * 60 - c.seconds;
+  var ndelta  = delta - 1;
   var seconds = delta % 60;
   var minutes = Math.floor(delta/60);
-  
-  if(minutes == 0) {
-    return seconds + "." + c.tenths;
+  var tenths  = 10 - c.tenths;
+  console.log("delta: " + delta + " seconds: " + seconds + " minutes: " +
+    minutes + " tenths: " + tenths);
+
+  if(delta == 60) {
+
+    if(minutes == 1) {
+
+      if(tenths == 10) {
+        return minutes + ":00";
+      } else {
+        return ndelta + "." + tenths;
+      }
+      
+    } else {
+      return minutes + ":59." + tenths;
+    }
+    
+    return str;
+
+  } else if(minutes == 0) {
+
+    if(ndelta == -1) {
+      return "0.0";
+    } else if(tenths == 10) {
+      return ndelta + ".0";
+    } else {
+      return ndelta + "." + tenths;
+    }
+    
   } else if(seconds < 10) {
-    return minutes + ":0" + seconds;
+    return minutes + ":0" + ndelta;
   } else {
-    return minutes + ":" + seconds;
+    return minutes + ":" + ndelta;
   }
-  
+
 } // gameClockToString
 
 
@@ -53,18 +80,19 @@ function updateScore(team, val) {
 
 function updateTimeouts(team, val) {
   
-  var t = null;
-  var s = document.createElement("span");
+  var t   = null;
+  var h5  = document.createElement("h5");
+  var s   = document.createElement("span");
 
   if(team == HOME) {
 
     t  = document.getElementById("homeTimeouts");
-    s.className = "fa fa-4x fa-circle light-blue";
+    s.className = "fa fa-5x fa-circle light-blue pull-right";
 
   } else {
 
     t  = document.getElementById("awayTimeouts");
-    s.className = "fa fa-4x fa-circle light-blue pull-right";
+    s.className = "fa fa-5x fa-circle light-blue pull-left";
 
   }
 
@@ -77,9 +105,11 @@ function updateTimeouts(team, val) {
   for(var j = 0; j < count; j++) {
     
     var x = s.cloneNode(true);
-    t.appendChild(x);
+    h5.appendChild(x);
 
   }
+
+  t.appendChild(h5);
   
 } // updateTimeouts
   
@@ -88,11 +118,11 @@ function updateFouls(team, val) {
 
   var f = null;
 
-  var small = document.createElement("small");
+  var span = document.createElement("span");
   var text  = document.createTextNode(FOULS);
   
-  small.className = "light-blue";
-  small.appendChild(text);
+  span.className = "light-blue";
+  span.appendChild(text);
   
   if(team == HOME) {
     f = document.getElementById("homeFoul");
@@ -101,7 +131,7 @@ function updateFouls(team, val) {
   }
 
   f.innerHTML = val + " ";
-  f.appendChild(small);
+  f.appendChild(span);
 
 } // updateFouls
 

@@ -14,7 +14,9 @@ const (
 	WS_CLOCK_START			= "CLOCK_START"
 	WS_CLOCK_STOP				= "CLOCK_STOP"
 	WS_CLOCK_RESET      = "CLOCK_RESET"
+	WS_CLOCK_STEP       = "CLOCK_STEP"
 	WS_SHOT_RESET       = "SHOT_RESET"
+	WS_SHOT_STEP        = "SHOT_STEP"
 	WS_PERIOD_UP        = "PERIOD_UP"
 	WS_PERIOD_DOWN      = "PERIOD_DOWN"
 	WS_POSSESSION_HOME  = "POSSESSION_HOME"
@@ -65,6 +67,8 @@ var connections = make(map[*websocket.Conn]bool)
 
 func notify(key string, val string) {
 
+	log.Println(key, val)
+	
 	n := Notification{
 		Key: key,
 		Val: val,
@@ -275,7 +279,7 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 		switch req.Cmd {
 		case WS_CLOCK_START:
-			go game.GameData.Clk.Start(game.Settings)
+			go game.GameData.Clk.Start()
 
 			go hose(c)
 
@@ -283,7 +287,17 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		  game.GameData.Clk.Stop()
 
 		case WS_CLOCK_RESET:
+		  game.GameData.Clk.GameClockReset()
+
 		case WS_SHOT_RESET:
+		  game.GameData.Clk.ShotClockReset()
+
+    case WS_SHOT_STEP:
+		  game.GameData.Clk.StepShotClock(req.Step)
+
+		case WS_CLOCK_STEP:
+		  game.GameData.Clk.StepGameClock(req.Step)
+
 		case WS_PERIOD_UP:
 			incrementPeriod(1)
 		
