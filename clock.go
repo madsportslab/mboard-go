@@ -9,7 +9,6 @@ import (
 type Clock struct {
 	Tenths			int		`json:"tenths"`
 	Seconds 		int		`json:"seconds"`
-	//Minutes     int		`json:"minutes"`
 }
 
 type GameClocks struct {
@@ -66,7 +65,6 @@ func (gc *GameClocks) Run() {
 		}
 
 		if gc.PlayClock.Seconds == game.Settings.Minutes * 60 {
-			gc.Ticker.Stop()
 			gc.FinalChan <- true
 		}
 
@@ -91,14 +89,15 @@ func (gc *GameClocks) Start() {
 
 	go gc.Run()
 
-	for {
+	/*for {
 		select {
 		case <-gc.ShotViolationChan:
 			gc.ShotClockReset()
 		case <-gc.FinalChan:
+		  gc.Ticker.Stop()
 			return
 		}
-	}
+	}*/
 
 } // Start
 
@@ -113,6 +112,8 @@ func (gc *GameClocks) Stop() {
 func (gc *GameClocks) ShotClockReset() {
 
 	if gc.Ticker != nil {
+
+		gc.Ticker.Stop()
 
 		gc.ShotClock.Seconds 	= 0
 		gc.ShotClock.Tenths 	= 0
@@ -131,6 +132,8 @@ func (gc *GameClocks) GameClockReset() {
 
 	gc.PlayClock.Seconds 	= 0
 	gc.PlayClock.Tenths 	= 0
+	gc.ShotClock.Seconds  = 0
+	gc.ShotClock.Tenths   = 0
 
 	gc.ClockOut()
 

@@ -68,7 +68,7 @@ var connections = make(map[*websocket.Conn]bool)
 func notify(key string, val string) {
 
 	log.Println(key, val)
-	
+
 	n := Notification{
 		Key: key,
 		Val: val,
@@ -215,18 +215,22 @@ func setPossession(name string) {
 
 } // setPossession
 
-func hose(c *websocket.Conn) {
+func firehose(c *websocket.Conn) {
 
   for {
 
 		select {
+		case <-game.GameData.Clk.ShotViolationChan:
+		  game.GameData.Clk.ShotClockReset()
+		case <-game.GameData.Clk.FinalChan:
+		  game.GameData.Clk.Ticker.Stop()
 		case s := <-game.GameData.Clk.OutChan:
 		  notify("CLOCK", string(s))
 		}
 
 	}
 
-} // hose
+} // firehose
 
 func controlHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -248,6 +252,8 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+
+	go firehose(c)
 
 	connections[c] = true
 
@@ -280,8 +286,6 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		switch req.Cmd {
 		case WS_CLOCK_START:
 			go game.GameData.Clk.Start()
-
-			go hose(c)
 
 		case WS_CLOCK_STOP:
 		  game.GameData.Clk.Stop()

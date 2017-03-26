@@ -188,6 +188,12 @@ function updateTeam(team, data) {
 
 function updateDisplay(data) {
 
+  console.log(data);
+  if(data == "") {
+    alert("no games started");
+    return;
+  }
+
   var j = JSON.parse(data);
 
   console.log(j);
