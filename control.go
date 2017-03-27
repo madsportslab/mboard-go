@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
   "net/http"
+	"sync"
 
   //"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -63,7 +64,7 @@ type Req struct {
 	Step				int					`json:"step"`        
 }
 
-var connections = make(map[*websocket.Conn]bool)
+var connections = make(map[*websocket.Conn]*sync.Mutex)
 
 func notify(key string, val string) {
 
@@ -80,8 +81,12 @@ func notify(key string, val string) {
 		log.Println(jsonErr)
 	}
 
-	for c := range connections {
+	for c, mu := range connections {
+
+		mu.Lock()
 		c.WriteMessage(websocket.TextMessage, j)
+		mu.Unlock()
+
 	}
 
 
@@ -255,7 +260,7 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 	go firehose(c)
 
-	connections[c] = true
+	connections[c] = &sync.Mutex{}
 
 	log.Println("connection #:", len(connections))
 
