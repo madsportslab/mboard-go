@@ -179,24 +179,30 @@ function updateClock(game, shot, mins, secs) {
 
 function updateTeam(team, data) {
 
+  if(data == null || data == undefined ||
+    data == "") {
+    return;
+  }
+
   updateFouls(team, data.fouls);
   updateTimeouts(team, data.timeouts);
   updateScore(team, calcScore(data.points));
 
-} // team
+} // updateTeam
 
 
 function updateDisplay(data) {
 
-  console.log(data);
-  if(data == "") {
-    alert("no games started");
+  if(data == null || data == undefined ||
+    data == "") {
     return;
   }
 
   var j = JSON.parse(data);
 
-  console.log(j);
+  if(j instanceof Array) {
+    return;
+  }
 
   updatePeriod(j.period);
 

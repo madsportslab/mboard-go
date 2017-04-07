@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"text/template"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -15,9 +17,12 @@ const (
 	VERSION = "0.1"
 )
 
-var server = flag.String("server", "127.0.0.1:8000", "http server address")
+var database 	= flag.String("database", "./db/mpi.db", "database address")
+var server 		= flag.String("server", "127.0.0.1:8000", "http server address")
 
 var testTmpl = template.Must(template.ParseFiles("www/test.html"))
+
+var data *sql.DB = nil
 
 func version() string {
   return fmt.Sprintf(APPNAME, VERSION)
@@ -26,6 +31,18 @@ func version() string {
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	testTmpl.Execute(w, nil)
 } // testHandler
+
+func initDatabase() {
+
+  db, err := sql.Open("sqlite3", *database)
+
+	if err != nil {
+		log.Fatal("Database connection error: ", err)
+	}
+
+	data = db
+
+} // initDatabase
 
 func initRouter() *mux.Router {
 
@@ -39,6 +56,7 @@ func initRouter() *mux.Router {
 
 	router.HandleFunc("/display", displayHandler)
 	router.HandleFunc("/test", testHandler)
+	router.HandleFunc("/setup", setupHandler)
 
 	//router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)
   router.HandleFunc("/ws/game", controlHandler)
@@ -52,6 +70,8 @@ func main() {
   flag.Parse()
 
   log.Printf("[%s] listening on address %s", version(), *server)
+
+  initDatabase()
 
   router := initRouter()
 

@@ -3,15 +3,17 @@ package main
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
   "log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
-	//"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -37,6 +39,7 @@ type Config struct {
 type GameInfo struct {
   Settings			*Config
 	GameData			*Game
+	Conns 				map[*websocket.Conn]*sync.Mutex
 }
 
 type GameState struct {
@@ -53,7 +56,15 @@ type GameRes struct {
 	GameId 	string 	`json:"gameId"`
 }
 
-var game *GameInfo
+type GameTbl struct {
+	ID			string `json:"id"`
+	Key     string `json:"key"`
+	Val     sql.NullString `json:"val"`
+	Created string `json:"created"`
+	Updated string `json:"updated"`
+}
+
+var game = &GameInfo{}
 
 func parseConfig(r *http.Request) *Config {
 
@@ -75,7 +86,9 @@ func parseConfig(r *http.Request) *Config {
 
 			if f == HOME || f == AWAY {
 				// string value
-
+				config.Home = val
+			} else if f == AWAY {
+			  config.Away = val
 			} else {
 
 				if val == "" {
@@ -88,6 +101,7 @@ func parseConfig(r *http.Request) *Config {
 					log.Println(err)
 				} else {
 
+					// TODO: fouls and shot can equal 0
           if i < 1 || i > 30 {
 						continue
 					}
@@ -160,6 +174,55 @@ func generateId(config *Config, length int) string {
  
 } // generateId
 
+
+func addGame(id string) {
+
+	_, err := data.Exec(
+		GameCreate, id,
+	)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+
+} // addGame
+
+func getGames() []GameTbl {
+
+  rows, err := data.Query(
+		GamesGet,
+	)
+
+	if err != nil {
+		log.Printf("[%s][Error][DB] %s", version(), err)
+		return nil
+	}
+
+	defer rows.Close()
+
+	gt := []GameTbl{}
+
+	for rows.Next() {
+
+			g := GameTbl{}
+
+			err := rows.Scan(&g.ID, &g.Key, &g.Val, &g.Created, &g.Updated)
+
+			if err == sql.ErrNoRows || err != nil {
+				log.Printf("[%s][Error] %s", version(), err)
+				return nil
+			}
+
+			gt = append(gt, g)
+
+	}
+
+	return gt
+
+} // getGames
+
+
 func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
@@ -170,11 +233,13 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
     config := parseConfig(r)
 
 		log.Println(config)
-/*
-		gid := generateId(config, 10)
 
-		log.Println(gid)
+		/*gid := generateId(config, 10)
 
+		log.Println("game id: ", gid)
+
+		addGame(gid)
+		
     gr := GameRes{
 			GameId: gid,
 		}
@@ -184,7 +249,8 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-*/
+		*/
+
 		h := initTeam(config.Home, config.Timeouts)
 		a := initTeam(config.Away, config.Timeouts)
 
@@ -197,6 +263,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 				Away: a,
 				Clk: c,
 			},
+			Conns: make(map[*websocket.Conn]*sync.Mutex),
 		}
 
     game = &gi
@@ -205,29 +272,35 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodGet:
 
+		log.Println(game)
+
 		if game != nil {
 
-			gs := GameState{
-				Settings: game.Settings,
-				Period: game.GameData.Period,
-				Possession: game.GameData.Possession,
-				Home: game.GameData.Home,
-				Away: game.GameData.Away,
-				GameClock: game.GameData.Clk.PlayClock,
-				ShotClock: game.GameData.Clk.ShotClock,
-			}
+				gs := GameState{
+					Settings: game.Settings,
+					Period: game.GameData.Period,
+					Possession: game.GameData.Possession,
+					Home: game.GameData.Home,
+					Away: game.GameData.Away,
+					GameClock: game.GameData.Clk.PlayClock,
+					ShotClock: game.GameData.Clk.ShotClock,
+				}
 
-			j, jsonErr := json.Marshal(gs)
+				j, jsonErr := json.Marshal(gs)
 
-			if jsonErr != nil {
-				log.Println(jsonErr)
-			}
+				if jsonErr != nil {
+					log.Println(jsonErr)
+				}
 
-			w.Write(j)
+				w.Write(j)
 
+		} else {
+			w.WriteHeader(http.StatusNotFound)
 		}
-	  
+
 	case http.MethodPut:
+	  // save game
+
 	case http.MethodDelete:
 	default:
 		log.Printf("[%s][Error] unsupported command", version())

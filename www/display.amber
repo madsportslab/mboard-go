@@ -55,6 +55,8 @@ block content
 
         updateDisplay(http.responseText);
 
+        console.log(http.responseText);
+        
         var ws = new WebSocket(GAME_SOCKET);
 
         ws.onmessage = function(e) {

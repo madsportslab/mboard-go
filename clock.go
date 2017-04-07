@@ -72,7 +72,7 @@ func (gc *GameClocks) Run() {
 			gc.ShotViolationChan <- true
 		}
 
-		gc.ClockOut();
+		gc.ClockOut()
 		
 	}
 
@@ -88,16 +88,6 @@ func (gc *GameClocks) Start() {
 	gc.Ticker = time.NewTicker(time.Millisecond * 100)
 
 	go gc.Run()
-
-	/*for {
-		select {
-		case <-gc.ShotViolationChan:
-			gc.ShotClockReset()
-		case <-gc.FinalChan:
-		  gc.Ticker.Stop()
-			return
-		}
-	}*/
 
 } // Start
 

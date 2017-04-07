@@ -7,7 +7,6 @@ import (
   "net/http"
 	"sync"
 
-  //"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -64,7 +63,9 @@ type Req struct {
 	Step				int					`json:"step"`        
 }
 
-var connections = make(map[*websocket.Conn]*sync.Mutex)
+//Games[id], has sockets, each socket has a mutex, and record
+
+//var connections = make(map[string]map[*websocket.Conn]*sync.Mutex)
 
 func notify(key string, val string) {
 
@@ -81,7 +82,7 @@ func notify(key string, val string) {
 		log.Println(jsonErr)
 	}
 
-	for c, mu := range connections {
+	for c, mu := range game.Conns {
 
 		mu.Lock()
 		c.WriteMessage(websocket.TextMessage, j)
@@ -220,7 +221,7 @@ func setPossession(name string) {
 
 } // setPossession
 
-func firehose(c *websocket.Conn) {
+func firehose(game *GameInfo) {
 
   for {
 
@@ -239,10 +240,6 @@ func firehose(c *websocket.Conn) {
 
 func controlHandler(w http.ResponseWriter, r *http.Request) {
 
-  /*vars := mux.Vars(r)
-
-	id := vars["id"]*/
-
   upgrader := websocket.Upgrader {
 		ReadBufferSize:		1024,
 		WriteBufferSize: 	1024,
@@ -258,11 +255,11 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	go firehose(c)
+	game.Conns[c] = &sync.Mutex{}
 
-	connections[c] = &sync.Mutex{}
+	go firehose(game)
 
-	log.Println("connection #:", len(connections))
+	log.Println("connection #:", len(game.Conns))
 
 	defer c.Close()
 
