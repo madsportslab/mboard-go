@@ -50,16 +50,25 @@ func (gc *GameClocks) Run() {
 
 	for _ = range gc.Ticker.C {
 
+		if gc.ShotClock.Seconds == game.Settings.Shot {
+			gc.ShotClock.Tenths 	= 0
+			gc.ShotClock.Seconds 	= 0
+		}
+
 		if gc.PlayClock.Tenths == 9 {
+
 			gc.PlayClock.Tenths = 0
 			gc.PlayClock.Seconds++
+
 		} else {
 			gc.PlayClock.Tenths++
 		}
 
 		if gc.ShotClock.Tenths == 9 {
+
 			gc.ShotClock.Tenths = 0
 			gc.ShotClock.Seconds++
+		
 		} else {
 			gc.ShotClock.Tenths++
 		}

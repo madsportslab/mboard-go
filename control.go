@@ -21,7 +21,8 @@ const (
 	WS_PERIOD_DOWN      = "PERIOD_DOWN"
 	WS_POSSESSION_HOME  = "POSSESSION_HOME"
 	WS_POSSESSION_AWAY  = "POSSESSION_AWAY"
-	WS_FINAL            = "FINAL" 
+	WS_FINAL            = "FINAL"
+	WS_ABORT      			= "ABORT"
 )
 
 const (
@@ -35,6 +36,21 @@ const (
 	WS_TIMEOUT_HOME_DOWN     	= "TIMEOUT_HOME_DOWN"
 	WS_TIMEOUT_AWAY_UP       	= "TIMEOUT_AWAY_UP"
 	WS_TIMEOUT_AWAY_DOWN     	= "TIMEOUT_AWAY_DOWN"
+)
+
+const (
+	WS_RET_POSSESSION_HOME    = "POSSESSION_HOME"
+	WS_RET_POSSESSION_AWAY    = "POSSESSION_AWAY"
+	WS_RET_HOME_SCORE    			= "HOME_SCORE"
+	WS_RET_AWAY_SCORE    			= "AWAY_SCORE"
+	WS_RET_CLOCK              = "CLOCK"
+	WS_RET_PERIOD             = "PERIOD"
+	WS_RET_HOME_FOUL          = "HOME_FOUL"
+	WS_RET_AWAY_FOUL          = "AWAY_FOUL"
+	WS_RET_HOME_TIMEOUT       = "HOME_TIMEOUT"
+	WS_RET_AWAY_TIMEOUT       = "AWAY_TIMEOUT"
+	WS_RET_SHOT_VIOLATION     = "SHOT_VIOLATION"
+	WS_RET_END_PERIOD         = "END_PERIOD"
 )
 
 type Team struct {
@@ -62,6 +78,8 @@ type Req struct {
 	Cmd					string 			`json:"cmd"`
 	Step				int					`json:"step"`        
 }
+
+var periodNames = []string{"1st", "2nd", "3rd", "4th"}
 
 //Games[id], has sockets, each socket has a mutex, and record
 
@@ -110,7 +128,7 @@ func incrementPoints(name string, val int) {
 		game.GameData.Home.Points[game.GameData.Period] = total +
 			val
 
-		notify("HOME_SCORE", fmt.Sprintf("%d", total + val))
+		notify(WS_RET_HOME_SCORE, fmt.Sprintf("%d", total + val))
 		
 	} else if name == AWAY {
 
@@ -123,7 +141,7 @@ func incrementPoints(name string, val int) {
 		game.GameData.Away.Points[game.GameData.Period] = total +
 			val
 
-		notify("AWAY_SCORE", fmt.Sprintf("%d", total + val))
+		notify(WS_RET_AWAY_SCORE, fmt.Sprintf("%d", total + val))
 		
 	}
 
@@ -143,7 +161,7 @@ func incrementFoul(name string, val int) {
 
 		game.GameData.Home.Fouls = game.GameData.Home.Fouls + val
 		
-		notify("HOME_FOUL", fmt.Sprintf("%d", game.GameData.Home.Fouls))
+		notify(WS_RET_HOME_FOUL, fmt.Sprintf("%d", game.GameData.Home.Fouls))
 
 	} else if name == AWAY {
 
@@ -153,7 +171,7 @@ func incrementFoul(name string, val int) {
 
 		game.GameData.Away.Fouls = game.GameData.Away.Fouls + val
 
-		notify("AWAY_FOUL", fmt.Sprintf("%d", game.GameData.Away.Fouls))
+		notify(WS_RET_AWAY_FOUL, fmt.Sprintf("%d", game.GameData.Away.Fouls))
 
 	}
 
@@ -174,7 +192,7 @@ func incrementTimeout(name string, val int) {
 
 		game.GameData.Home.Timeouts = game.GameData.Home.Timeouts + val
 
-		notify("HOME_TIMEOUT", fmt.Sprintf("%d", game.GameData.Home.Timeouts))
+		notify(WS_RET_HOME_TIMEOUT, fmt.Sprintf("%d", game.GameData.Home.Timeouts))
 		
 	} else if name == AWAY {
 
@@ -185,7 +203,7 @@ func incrementTimeout(name string, val int) {
 
 		game.GameData.Away.Timeouts = game.GameData.Away.Timeouts + val
 
-		notify("AWAY_TIMEOUT", fmt.Sprintf("%d", game.GameData.Away.Timeouts))
+		notify(WS_RET_AWAY_TIMEOUT, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
 
 	}
 
@@ -199,7 +217,15 @@ func incrementPeriod(val int) {
 
   game.GameData.Period = game.GameData.Period + val
 
-	notify("PERIOD", fmt.Sprintf("%d", game.GameData.Period))
+	game.GameData.Clk.GameClockReset()
+
+	if game.GameData.Period < 5 {
+		notify(WS_RET_PERIOD, periodNames[game.GameData.Period])
+	} else {
+		notify(WS_RET_PERIOD, fmt.Sprintf("OT%d",  game.GameData.Period - 3))
+	}
+
+
 
 } // incrementPeriod
 
@@ -209,13 +235,13 @@ func setPossession(name string) {
  	 	
 		game.GameData.Possession = true
 
-		notify("POSSESSION_HOME", "")
+		notify(WS_RET_POSSESSION_HOME, "")
 
 	} else {
 		
 		game.GameData.Possession = false
 
-		notify("POSSESSION_AWAY", "")
+		notify(WS_RET_POSSESSION_AWAY, "")
 
 	}
 
@@ -227,11 +253,17 @@ func firehose(game *GameInfo) {
 
 		select {
 		case <-game.GameData.Clk.ShotViolationChan:
-		  game.GameData.Clk.ShotClockReset()
-		case <-game.GameData.Clk.FinalChan:
+		
 		  game.GameData.Clk.Ticker.Stop()
+			notify(WS_RET_SHOT_VIOLATION, "1")
+		
+		case <-game.GameData.Clk.FinalChan:
+
+		  game.GameData.Clk.Ticker.Stop()
+			notify(WS_RET_END_PERIOD, "1")
+		
 		case s := <-game.GameData.Clk.OutChan:
-		  notify("CLOCK", string(s))
+		  notify(WS_RET_CLOCK, string(s))
 		}
 
 	}
@@ -317,6 +349,13 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		  setPossession(AWAY)
 
 		case WS_FINAL:
+			game.Final = true
+
+		case WS_ABORT:
+
+			game.GameData.Clk.Stop()
+
+			// close connections and channels
 		
 		case WS_SCORE_HOME:
 

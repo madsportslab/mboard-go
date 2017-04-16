@@ -56,7 +56,7 @@ block content
         updateDisplay(http.responseText);
 
         console.log(http.responseText);
-        
+
         var ws = new WebSocket(GAME_SOCKET);
 
         ws.onmessage = function(e) {
@@ -96,6 +96,8 @@ block content
           //alert("FUCKING BUTT SLAMMED");
         }
         
+      } else if(http.status == 403) {
+
       }
 
     }

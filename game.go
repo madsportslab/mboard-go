@@ -40,6 +40,10 @@ type GameInfo struct {
   Settings			*Config
 	GameData			*Game
 	Conns 				map[*websocket.Conn]*sync.Mutex
+	Final         bool
+	Created       string
+	ID            int64
+	Active        bool
 }
 
 type GameState struct {
@@ -53,13 +57,12 @@ type GameState struct {
 }
 
 type GameRes struct {
-	GameId 	string 	`json:"gameId"`
+	Msg 	string 	`json:"msg"`
 }
 
 type GameTbl struct {
 	ID			string `json:"id"`
-	Key     string `json:"key"`
-	Val     sql.NullString `json:"val"`
+  Data    sql.NullString `json:"data"`
 	Created string `json:"created"`
 	Updated string `json:"updated"`
 }
@@ -175,16 +178,27 @@ func generateId(config *Config, length int) string {
 } // generateId
 
 
-func addGame(id string) {
+func addGame() int64 {
 
-	_, err := data.Exec(
-		GameCreate, id,
+	res, err := data.Exec(
+		GameCreate,
 	)
 
 	if err != nil {
 		log.Println(err)
+		return -1
 	}
 
+	id, err := res.LastInsertId()
+
+	if err != nil {
+		
+		log.Println(err)
+		return -1
+
+	}
+
+	return id
 
 } // addGame
 
@@ -207,7 +221,7 @@ func getGames() []GameTbl {
 
 			g := GameTbl{}
 
-			err := rows.Scan(&g.ID, &g.Key, &g.Val, &g.Created, &g.Updated)
+			err := rows.Scan(&g.ID, &g.Data, &g.Created, &g.Updated)
 
 			if err == sql.ErrNoRows || err != nil {
 				log.Printf("[%s][Error] %s", version(), err)
@@ -233,23 +247,13 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
     config := parseConfig(r)
 
 		log.Println(config)
-
-		/*gid := generateId(config, 10)
-
-		log.Println("game id: ", gid)
-
-		addGame(gid)
 		
-    gr := GameRes{
-			GameId: gid,
+		if game.Active {
+			w.WriteHeader(http.StatusForbidden)
+			return
 		}
-		
-		j, err := json.Marshal(gr)
 
-		if err != nil {
-			log.Println(err)
-		}
-		*/
+		id := addGame()
 
 		h := initTeam(config.Home, config.Timeouts)
 		a := initTeam(config.Away, config.Timeouts)
@@ -264,17 +268,19 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 				Clk: c,
 			},
 			Conns: make(map[*websocket.Conn]*sync.Mutex),
+			Final: false,
+			Created: time.Now().String(),
+			ID: id,
+			Active: true,
 		}
 
     game = &gi
-
-		w.Write([]byte("SUCCESS"))
 
 	case http.MethodGet:
 
 		log.Println(game)
 
-		if game != nil {
+		if game.Active {
 
 				gs := GameState{
 					Settings: game.Settings,

@@ -46,7 +46,7 @@ function gameClockToString(c, mins) {
     if(ndelta == -1) {
       return "0.0";
     } else if(tenths == 10) {
-      return ndelta + ".0";
+      return delta + ".0";
     } else {
       return ndelta + "." + tenths;
     }
