@@ -85,6 +85,28 @@ var periodNames = []string{"1st", "2nd", "3rd", "4th"}
 
 //var connections = make(map[string]map[*websocket.Conn]*sync.Mutex)
 
+func calcTotalScore(home bool) int {
+
+  total := 0
+
+	if home {
+
+    for _, v := range game.GameData.Home.Points {
+			total = total + v
+		}
+
+	} else {
+
+    for _, v := range game.GameData.Away.Points {
+			total = total + v
+		}
+
+	}
+
+  return total
+
+} // calcTotalScore
+
 func notify(key string, val string) {
 
 	log.Println(key, val)
@@ -128,7 +150,7 @@ func incrementPoints(name string, val int) {
 		game.GameData.Home.Points[game.GameData.Period] = total +
 			val
 
-		notify(WS_RET_HOME_SCORE, fmt.Sprintf("%d", total + val))
+		notify(WS_RET_HOME_SCORE, fmt.Sprintf("%d", calcTotalScore(true)))
 		
 	} else if name == AWAY {
 
@@ -141,7 +163,7 @@ func incrementPoints(name string, val int) {
 		game.GameData.Away.Points[game.GameData.Period] = total +
 			val
 
-		notify(WS_RET_AWAY_SCORE, fmt.Sprintf("%d", total + val))
+		notify(WS_RET_AWAY_SCORE, fmt.Sprintf("%d", calcTotalScore(false)))
 		
 	}
 

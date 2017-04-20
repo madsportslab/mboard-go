@@ -1,5 +1,23 @@
 /* madpi.js */
 
+function restURL() {
+
+  var base = document.getElementById("base").value;
+
+  console.log(HTTP + base + GAMES);
+
+  return HTTP + base + GAMES;
+
+} // restURL
+
+function wsURL(base) {
+
+  var base = document.getElementById("base").value;
+
+  return WS + base + GAME_SOCKET;
+
+} // wsURL
+
 function calcScore(data) {
 
   var keys = Object.keys(data);

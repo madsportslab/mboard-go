@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -34,14 +35,14 @@ func getAddress(name string) string {
 			ipnet, ok := addrs[1].(*net.IPNet)
 
 			if ok {
-				return ipnet.IP.String()
+				return fmt.Sprintf("%s%s", ipnet.IP.String(), *port)
 			}
 
 		}
 
 	}
 
-	return "hello"
+	return ""
 
 } // getAddress
 

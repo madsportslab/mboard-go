@@ -12,6 +12,10 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
   switch r.Method {
   case http.MethodGet:
 
+		data := make(map[string]string)
+
+		data["base"] = getAddress("en0")
+
 	  compiler := amber.New()
 
 		err := compiler.ParseFile("www/display.amber")
@@ -34,7 +38,9 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		template.Execute(w, nil)
+		log.Println(data)
+
+		template.Execute(w, data)
 
   case http.MethodPost:
   case http.MethodDelete:

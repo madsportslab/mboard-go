@@ -45,6 +45,7 @@ block content
       div.col-lg-3.col-md-3.col-sm-3.col-xs-3
         h5.small.green.pull-right[id="awayFoul"] 8
           span.light-blue Fouls
+      input[type="hidden"][id="base"][value=base]
   script
     
     var http = new XMLHttpRequest();
@@ -57,7 +58,7 @@ block content
 
         console.log(http.responseText);
 
-        var ws = new WebSocket(GAME_SOCKET);
+        var ws = new WebSocket(wsURL());
 
         ws.onmessage = function(e) {
 
@@ -102,5 +103,5 @@ block content
 
     }
 
-    http.open("GET", GAME, true);
+    http.open("GET", restURL(), true);
     http.send();

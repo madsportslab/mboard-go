@@ -1,10 +1,9 @@
 /* config.js */
 
-const ADDR          = "127.0.0.1:8000";
-const WWW           = "http://" + ADDR;
-const GAME          = WWW + "/api/games";
-const SOCKET        = "ws://" + ADDR;
-const GAME_SOCKET   = SOCKET + "/ws/game";
+const HTTP          = "http://";
+const WS            = "ws://";
+const GAMES         = "/api/games";
+const GAME_SOCKET   = "/ws/game";
 
 const HOME          = "HOME";
 const AWAY          = "AWAY";

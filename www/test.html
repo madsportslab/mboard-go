@@ -231,6 +231,10 @@
           return false;
         }
 
+      } else if(xhr.status == 403) {
+
+        console.log("game already exists");
+
       }
 
     }

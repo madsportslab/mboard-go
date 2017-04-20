@@ -18,7 +18,8 @@ const (
 )
 
 var database 	= flag.String("database", "./db/mpi.db", "database address")
-var server 		= flag.String("server", "127.0.0.1:8000", "http server address")
+//var server 		= flag.String("server", "127.0.0.1:8000", "http server address")
+var port 			= flag.String("port", ":8000", "service port")
 
 var testTmpl = template.Must(template.ParseFiles("www/test.html"))
 
@@ -69,12 +70,14 @@ func main() {
 
   flag.Parse()
 
-  log.Printf("[%s] listening on address %s", version(), *server)
+	addr := getAddress("en0")
+
+  log.Printf("[%s] listening on address %s", version(), addr)
 
   initDatabase()
 
   router := initRouter()
 
-	log.Fatal(http.ListenAndServe(*server, router))
+	log.Fatal(http.ListenAndServe(addr, router))
 
 } // main
