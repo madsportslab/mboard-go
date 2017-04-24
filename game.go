@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/hmac"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -58,13 +57,6 @@ type GameState struct {
 
 type GameRes struct {
 	Msg 	string 	`json:"msg"`
-}
-
-type GameTbl struct {
-	ID			string `json:"id"`
-  Data    sql.NullString `json:"data"`
-	Created string `json:"created"`
-	Updated string `json:"updated"`
 }
 
 var game = &GameInfo{}
@@ -178,65 +170,6 @@ func generateId(config *Config, length int) string {
 } // generateId
 
 
-func addGame() int64 {
-
-	res, err := data.Exec(
-		GameCreate,
-	)
-
-	if err != nil {
-		log.Println(err)
-		return -1
-	}
-
-	id, err := res.LastInsertId()
-
-	if err != nil {
-		
-		log.Println(err)
-		return -1
-
-	}
-
-	return id
-
-} // addGame
-
-func getGames() []GameTbl {
-
-  rows, err := data.Query(
-		GamesGet,
-	)
-
-	if err != nil {
-		log.Printf("[%s][Error][DB] %s", version(), err)
-		return nil
-	}
-
-	defer rows.Close()
-
-	gt := []GameTbl{}
-
-	for rows.Next() {
-
-			g := GameTbl{}
-
-			err := rows.Scan(&g.ID, &g.Data, &g.Created, &g.Updated)
-
-			if err == sql.ErrNoRows || err != nil {
-				log.Printf("[%s][Error] %s", version(), err)
-				return nil
-			}
-
-			gt = append(gt, g)
-
-	}
-
-	return gt
-
-} // getGames
-
-
 func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
@@ -248,7 +181,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 		log.Println(config)
 		
-		if game.Active {
+		if game != nil && game.Active {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
@@ -278,9 +211,9 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	case http.MethodGet:
 
-		log.Println(game)
-
-		if game.Active {
+    if game == nil {
+			w.WriteHeader(http.StatusNotFound)
+		} else if game.Active {
 
 				gs := GameState{
 					Settings: game.Settings,
@@ -305,7 +238,35 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case http.MethodPut:
-	  // save game
+	 
+	  if game.Active {
+
+			game.Active = false
+			game.Final 	= true
+
+			gr := GameRecord{
+				Home: game.GameData.Home,
+				Away: game.GameData.Away,
+			}
+
+			j, jsonErr := json.Marshal(gr)
+
+			if jsonErr != nil {
+				log.Printf("[%s] %s", version(), jsonErr)
+				w.WriteHeader(http.StatusInternalServerError)
+			} else {
+
+				updateGame(game.ID, string(j))
+
+				game = nil
+
+				w.WriteHeader(http.StatusOK)
+
+			}
+
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 
 	case http.MethodDelete:
 	default:

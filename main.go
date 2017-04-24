@@ -17,7 +17,7 @@ const (
 	VERSION = "0.1"
 )
 
-var database 	= flag.String("database", "./db/mpi.db", "database address")
+var database 	= flag.String("database", "./db/med.db", "database address")
 //var server 		= flag.String("server", "127.0.0.1:8000", "http server address")
 var port 			= flag.String("port", ":8000", "service port")
 
@@ -54,6 +54,8 @@ func initRouter() *mux.Router {
 
 	router.HandleFunc("/api/games", gameHandler)
 	router.HandleFunc("/api/games/{id:[0-9a-f]+}", gameHandler)
+  router.HandleFunc("/api/scores", scoreHandler)
+	router.HandleFunc("/api/version", versionHandler)
 
 	router.HandleFunc("/display", displayHandler)
 	router.HandleFunc("/test", testHandler)
