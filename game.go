@@ -79,7 +79,7 @@ func parseConfig(r *http.Request) *Config {
 
 			val := r.FormValue(f)
 
-			if f == HOME || f == AWAY {
+			if f == HOME {
 				// string value
 				config.Home = val
 			} else if f == AWAY {

@@ -11,7 +11,8 @@ const (
 
 	GamesGet = "SELECT " +
 	  "id, data, status, created, updated " + 
-		"FROM games"
+		"FROM games " +
+		"ORDER BY created DESC"
 
 	GameUpdate = "UPDATE games " +
 	  "SET data=?, updated=CURRENT_TIMESTAMP, status=? " +

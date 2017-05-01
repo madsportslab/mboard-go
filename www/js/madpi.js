@@ -40,6 +40,7 @@ function gameClockToString(c, mins) {
   var seconds = delta % 60;
   var minutes = Math.floor(delta/60);
   var tenths  = 10 - c.tenths;
+
   console.log("delta: " + delta + " seconds: " + seconds + " minutes: " +
     minutes + " tenths: " + tenths);
 
@@ -69,10 +70,12 @@ function gameClockToString(c, mins) {
       return ndelta + "." + tenths;
     }
     
-  } else if(seconds < 10) {
-    return minutes + ":0" + ndelta;
+  } else if(seconds == 0) {
+    return minutes + ":00";
+  } else if(seconds < 10 && seconds >= 0) {
+    return minutes + ":0" + seconds;
   } else {
-    return minutes + ":" + ndelta;
+    return minutes + ":" + seconds;
   }
 
 } // gameClockToString
@@ -202,9 +205,25 @@ function updateTeam(team, data) {
     return;
   }
 
-  updateFouls(team, data.fouls);
-  updateTimeouts(team, data.timeouts);
-  updateScore(team, calcScore(data.points));
+  var span = document.createElement("span");
+
+  span.className = "fa fa-photo";
+  
+  if(team == HOME) {
+    
+    var h = document.getElementById("homeTeam");
+    h.innerHTML = data.name + "  ";
+    span.setAttribute("id", "homeLogo");
+    h.appendChild(span);
+
+  } else if(team == AWAY) {
+    
+    var a = document.getElementById("awayTeam");
+    a.innerHTML = data.name + "  ";
+    span.setAttribute("id", "awayLogo");
+    a.appendChild(span);
+  
+  }
 
 } // updateTeam
 
