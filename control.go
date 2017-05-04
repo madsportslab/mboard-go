@@ -241,13 +241,7 @@ func incrementPeriod(val int) {
 
 	game.GameData.Clk.GameClockReset()
 
-	if game.GameData.Period < 5 {
-		notify(WS_RET_PERIOD, periodNames[game.GameData.Period])
-	} else {
-		notify(WS_RET_PERIOD, fmt.Sprintf("OT%d",  game.GameData.Period - 3))
-	}
-
-
+  notify(WS_RET_PERIOD, fmt.Sprintf("%d", game.GameData.Period))
 
 } // incrementPeriod
 
@@ -309,7 +303,17 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	game.Conns[c] = &sync.Mutex{}
+	log.Println(game)
+
+  if game.Settings == nil {
+		
+		c.WriteMessage(websocket.CloseMessage, 
+		  websocket.FormatCloseMessage(1000, "woops"))
+			
+		return
+	}
+
+  game.Conns[c] = &sync.Mutex{}
 
 	go firehose(game)
 

@@ -32,10 +32,16 @@ func getAddress(name string) string {
 				break
 			}
 
-			ipnet, ok := addrs[1].(*net.IPNet)
+      if len(addrs) > 1 {
 
-			if ok {
-				return fmt.Sprintf("%s%s", ipnet.IP.String(), *port)
+				ipnet, ok := addrs[1].(*net.IPNet)
+
+				if ok {
+					return fmt.Sprintf("%s%s", ipnet.IP.String(), *port)
+				}
+				
+			} else {
+				return "127.0.0.1:8000"
 			}
 
 		}

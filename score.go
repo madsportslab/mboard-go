@@ -6,6 +6,7 @@ import (
   "log"
 	"net/http"
 
+  "github.com/gorilla/mux"
 )
 
 type GameRecord struct {
@@ -92,25 +93,100 @@ func getGames() []GameTbl {
 
 } // getGames
 
+func getGame(id string) *GameTbl {
+
+  row := data.QueryRow(
+		GameGet, id,
+	)
+
+	gt := GameTbl{}
+
+	err := row.Scan(&gt.ID, &gt.Data, &gt.Status, &gt.Created, &gt.Updated)
+
+	if err == sql.ErrNoRows || err != nil {
+		log.Printf("[%s][Error] %s", version(), err)
+		return nil
+	}
+
+	return &gt
+
+} // getGame
+
+func deleteGame(id string) {
+
+  _, err := data.Exec(
+		GameDelete, id,
+	)
+
+	if err != nil {
+		log.Printf("[%s][Error] %s", version(), err)
+		return
+	}
+
+} // deleteGame
+
 func scoreHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
   case http.MethodPost:
 	case http.MethodGet:
 
-		gts := getGames()
+		vars := mux.Vars(r)
 
-		j, jsonErr := json.Marshal(gts)
+		id := vars["id"]
 
-		if jsonErr != nil {
-			log.Printf("[%s] %s", version(), jsonErr)
-			w.WriteHeader(http.StatusInternalServerError)
+		if id != "" {
+
+			g := getGame(id)
+
+			if g == nil {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+
+				j, jsonErr := json.Marshal(g)
+
+				if jsonErr != nil {
+					log.Printf("[%s] %s", version(), jsonErr)
+					w.WriteHeader(http.StatusInternalServerError)
+				} else {
+					w.Write(j)
+				}
+
+			}
+
 		} else {
-			w.Write(j)
+
+			gts := getGames()
+
+			j, jsonErr := json.Marshal(gts)
+
+			if jsonErr != nil {
+				log.Printf("[%s] %s", version(), jsonErr)
+				w.WriteHeader(http.StatusInternalServerError)
+			} else {
+				w.Write(j)
+			}
+
 		}
+
 
 	case http.MethodPut:
 	case http.MethodDelete:
+
+	  vars := mux.Vars(r)
+
+		id := vars["id"]
+
+		if id != "" {
+			
+			deleteGame(id)
+
+			w.WriteHeader(http.StatusOK)
+
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+
 	default:
 		log.Printf("[%s][Error] unsupported command", version())
 		w.WriteHeader(http.StatusMethodNotAllowed)

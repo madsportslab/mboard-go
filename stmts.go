@@ -4,8 +4,10 @@ const (
 
 	GameCreate = "INSERT into games DEFAULT VALUES"
 
+  GameDelete = "DELETE from games WHERE id=?"
+	
 	GameGet = "SELECT " +
-	  "data, created " +
+	  "id, data, status, created, updated " +
 		"FROM games " +
 		"WHERE id=?"
 

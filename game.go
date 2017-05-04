@@ -9,6 +9,7 @@ import (
   "log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -132,7 +133,7 @@ func parseConfig(r *http.Request) *Config {
 func initTeam(name string, timeouts int) *Team {
 
   team := Team{
-		Name: name,
+		Name: strings.Title(name),
 		Points: make(map[int]int),
 		Timeouts: timeouts,
 	}

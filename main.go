@@ -18,12 +18,15 @@ const (
 )
 
 var database 	= flag.String("database", "./db/med.db", "database address")
-//var server 		= flag.String("server", "127.0.0.1:8000", "http server address")
+var iface 		= flag.String("iface", "en0", "network interface")
 var port 			= flag.String("port", ":8000", "service port")
+var test      = flag.Bool("test", false, "test configuration")
 
 var testTmpl = template.Must(template.ParseFiles("www/test.html"))
 
 var data *sql.DB = nil
+
+//var SUPPORT_IFACES = ["en0", "eth0"]
 
 func version() string {
   return fmt.Sprintf(APPNAME, VERSION)
@@ -55,6 +58,7 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/api/games", gameHandler)
 	router.HandleFunc("/api/games/{id:[0-9a-f]+}", gameHandler)
   router.HandleFunc("/api/scores", scoreHandler)
+	router.HandleFunc("/api/scores/{id:[0-9a-f]+}", scoreHandler)
 	router.HandleFunc("/api/version", versionHandler)
 
 	router.HandleFunc("/display", displayHandler)
@@ -72,7 +76,13 @@ func main() {
 
   flag.Parse()
 
-	addr := getAddress("en0")
+	var addr = ""
+
+	if *test {
+		addr = fmt.Sprintf("127.0.0.1%s", *port)
+	} else {
+		addr = getAddress("en0")
+	}
 
   log.Printf("[%s] listening on address %s", version(), addr)
 

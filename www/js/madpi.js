@@ -240,7 +240,7 @@ function updateDisplay(data) {
   if(j instanceof Array) {
     return;
   }
-
+  console.log(j);
   updatePeriod(j.period);
 
   if(j.possession) {
