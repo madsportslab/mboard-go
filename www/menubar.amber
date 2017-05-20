@@ -2,3 +2,6 @@ div.navbar.navbar-static-top
   div.container
     div.navbar-header
       div.navbar-brand madsportslab
+    ul.nav.navbar-nav.navbar-right
+      li
+        a.green[href="#"] mboard 1.0

@@ -16,6 +16,7 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 
 		data["base"] = getAddress("en0")
 
+    log.Println(data)
 	  compiler := amber.New()
 
 		err := compiler.ParseFile("www/display.amber")

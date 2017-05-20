@@ -5,13 +5,13 @@ block content
   div.container
     div.row
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6.shade
-        h1.big.green.pull-right[id="gameClock"] 10:52
+        h1.big.green.pull-right[id="gameClock"] 12:00
       div.col-lg-3.col-md-3.col-sm-3.col-xs-3.shade
         h1.big.pull-left
           small.light-blue[id="period"] 1st
       div.col-lg-3.col-md-3.col-sm-3.col-xs-3.shade
         h1.big.pull-left
-          small.green[id="shotClock"] 21
+          small.green[id="shotClock"] 24
     div.row
       div.col-lg-6.col-md-6.col-sm-6.col-xs-6
         h1.small.light-blue[id="homeTeam"] Cavaliers
@@ -52,56 +52,55 @@ block content
 
     http.onreadystatechange = function() {
 
-      if(http.readyState == 4 && http.status == 200) {
+      if(http.readyState === 4 && http.status === 200) {
 
         updateDisplay(http.responseText);
-
-        console.log(http.responseText);
 
         var ws = new WebSocket(wsURL());
 
         ws.onmessage = function(e) {
 
           var obj = JSON.parse(e.data);
-          console.log(obj);
 
-          if(obj.key == HOME_SCORE) {
+          if(obj.key === HOME_SCORE) {
             updateScore(HOME, obj.val);
-          } else if(obj.key == AWAY_SCORE) {
+          } else if(obj.key === AWAY_SCORE) {
             updateScore(AWAY, obj.val);
-          } else if(obj.key == HOME_TIMEOUT) {
+          } else if(obj.key === HOME_TIMEOUT) {
             updateTimeouts(HOME, obj.val);
-          } else if(obj.key == AWAY_TIMEOUT) {
+          } else if(obj.key === AWAY_TIMEOUT) {
             updateTimeouts(AWAY, obj.val);
-          } else if(obj.key == HOME_FOUL) {
+          } else if(obj.key === HOME_FOUL) {
             updateFouls(HOME, obj.val);
-          } else if(obj.key == AWAY_FOUL) {
+          } else if(obj.key === AWAY_FOUL) {
             updateFouls(AWAY, obj.val);
-          } else if(obj.key == CLOCK) {
+          } else if(obj.key === CLOCK) {
 
             var j = JSON.parse(obj.val);
 
             updateClock(j.game, j.shot, j.minutes, j.shotclock);
             
-          } else if(obj.key == POSSESSION_HOME) {
+          } else if(obj.key === POSSESSION_HOME) {
             updatePossession(HOME);
-          } else if(obj.key == POSSESSION_AWAY) {
+          } else if(obj.key === POSSESSION_AWAY) {
             updatePossession(AWAY);
-          } else if(obj.key == PERIOD) {
+          } else if(obj.key === PERIOD) {
             updatePeriod(obj.val);
+          } else if(obj.key === FINAL) {
+            window.location = "/setup";
           }
           
         }
 
         ws.onclose = function(e) {
-          //alert("FUCKING BUTT SLAMMED");
+          console.log("connection closed by server i assume");
         }
         
-      } else if(http.status == 403) {
-
+      } else if(http.readyState === 4 && http.status === 404) {
+        window.location = "/setup";
       }
 
     }
 
-    http.open("GET", restURL(), true);
+    http.open("GET", gameURL(), true);
     http.send();

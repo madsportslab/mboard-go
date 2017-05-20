@@ -259,7 +259,29 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 				updateGame(game.ID, string(j))
 
-				game = nil
+				// signal end of game to clients
+				// clean up all connections
+
+				n := Notification{
+					Key: "FINAL",
+					Val: "",
+				}
+
+				j, jsonErr := json.Marshal(n)
+
+				if jsonErr != nil {
+					log.Println(jsonErr)
+				}
+
+				for c, mu := range game.Conns {
+
+					mu.Lock()
+					c.WriteMessage(websocket.TextMessage, j)
+					mu.Unlock()
+
+				}
+
+				game = &GameInfo{}
 
 				w.WriteHeader(http.StatusOK)
 

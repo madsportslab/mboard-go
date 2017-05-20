@@ -60,7 +60,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("generate QR code")
 		
 		ip := getAddress("en0")
-
+		
 		err2 := qrcode.WriteFile(ip, qrcode.Medium, 512, "www/qr.png")
 
 		if err2 != nil {

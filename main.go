@@ -60,7 +60,7 @@ func initRouter() *mux.Router {
   router.HandleFunc("/api/scores", scoreHandler)
 	router.HandleFunc("/api/scores/{id:[0-9a-f]+}", scoreHandler)
 	router.HandleFunc("/api/version", versionHandler)
-
+	
 	router.HandleFunc("/display", displayHandler)
 	router.HandleFunc("/test", testHandler)
 	router.HandleFunc("/setup", setupHandler)

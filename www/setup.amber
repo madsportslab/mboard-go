@@ -9,4 +9,26 @@ block content
           h2 Scan QR code to connect.
           br
           img[src="www/qr.png"]
-        
+  script
+    var http = new XMLHttpRequest();
+    
+    http.onreadystatechange = function() {
+
+      if(http.readyState === 4 && http.status === 200) {
+        window.location = "/display";
+      } else if(http.readyState == 4 && http.status === 404) {
+
+        setInterval(function() {
+
+          http.open("GET", gameURL(), true);
+          http.send();
+
+        }, 3000);
+
+      }
+
+    }
+
+    http.open("GET", gameURL(), true);
+    http.send();
+    

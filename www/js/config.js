@@ -13,6 +13,7 @@ const HOME_TIMEOUT  = "HOME_TIMEOUT";
 const AWAY_SCORE    = "AWAY_SCORE";
 const AWAY_FOUL     = "AWAY_FOUL";
 const AWAY_TIMEOUT  = "AWAY_TIMEOUT";
+const FINAL         = "FINAL";
 
 const GAME_SETTINGS     = "GAME_SETTINGS";
 const CLOCK             = "CLOCK";

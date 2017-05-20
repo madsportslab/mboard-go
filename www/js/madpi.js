@@ -1,21 +1,11 @@
 /* madpi.js */
 
-function restURL() {
-
-  var base = document.getElementById("base").value;
-
-  console.log(HTTP + base + GAMES);
-
-  return HTTP + base + GAMES;
-
-} // restURL
+function gameURL() {
+  return window.location.origin + GAMES;
+} // gameURL
 
 function wsURL(base) {
-
-  var base = document.getElementById("base").value;
-
-  return WS + base + GAME_SOCKET;
-
+  return WS + window.location.host + GAME_SOCKET;
 } // wsURL
 
 function calcScore(data) {

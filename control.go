@@ -305,11 +305,8 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println(game)
 
-  if game.Settings == nil {
-		
-		c.WriteMessage(websocket.CloseMessage, 
-		  websocket.FormatCloseMessage(1000, "woops"))
-			
+	if game.Settings == nil {
+		log.Println("shat")
 		return
 	}
 
