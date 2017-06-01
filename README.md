@@ -1,2 +1,2 @@
-# madpi
-Golang server on raspberry pi
+# mboard-go
+mboard backend server

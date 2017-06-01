@@ -1,4 +1,4 @@
-/* madpi.js */
+/* mboard.js */
 
 function gameURL() {
   return window.location.origin + GAMES;

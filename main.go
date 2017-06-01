@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	APPNAME = "madpi v%s"
+	APPNAME = "mboard-go v%s"
 	VERSION = "0.1"
 )
 
