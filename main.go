@@ -18,7 +18,7 @@ const (
 )
 
 var database 	= flag.String("database", "./db/med.db", "database address")
-var iface 		= flag.String("iface", "en0", "network interface")
+var iface 		= flag.String("iface", "en", "network interface")
 var port 			= flag.String("port", ":8000", "service port")
 var test      = flag.Bool("test", false, "test configuration")
 
@@ -60,6 +60,11 @@ func initRouter() *mux.Router {
   router.HandleFunc("/api/scores", scoreHandler)
 	router.HandleFunc("/api/scores/{id:[0-9a-f]+}", scoreHandler)
 	router.HandleFunc("/api/version", versionHandler)
+
+	// management apis
+
+	router.HandleFunc("/api/mgmt/details", detailsHandler)
+	router.HandleFunc("/api/mgmt/machine", machineHandler)
 	
 	router.HandleFunc("/display", displayHandler)
 	router.HandleFunc("/test", testHandler)
@@ -81,7 +86,7 @@ func main() {
 	if *test {
 		addr = fmt.Sprintf("127.0.0.1%s", *port)
 	} else {
-		addr = getAddress("en0")
+		addr = getAddress("en")
 	}
 
   log.Printf("[%s] listening on address %s", version(), addr)

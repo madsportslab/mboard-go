@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/eknkc/amber"
 	"github.com/skip2/go-qrcode"
@@ -23,7 +24,7 @@ func getAddress(name string) string {
 
 	for _, iface := range ifs {
 
-    if iface.Name == name {
+    if strings.HasPrefix(iface.Name, name) {
 			
 			addrs, err := iface.Addrs()
 
@@ -59,7 +60,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("generate QR code")
 		
-		ip := getAddress("en0")
+		ip := getAddress("en")
 		
 		err2 := qrcode.WriteFile(ip, qrcode.Medium, 512, "www/qr.png")
 

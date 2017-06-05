@@ -14,7 +14,7 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 
 		data := make(map[string]string)
 
-		data["base"] = getAddress("en0")
+		data["base"] = getAddress("en")
 
     log.Println(data)
 	  compiler := amber.New()
