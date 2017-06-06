@@ -33,7 +33,7 @@ func getAddress(name string) string {
 				break
 			}
 
-      if len(addrs) > 1 {
+/*      if len(addrs) > 1 {
 
 				ipnet, ok := addrs[1].(*net.IPNet)
 
@@ -43,7 +43,23 @@ func getAddress(name string) string {
 				
 			} else {
 				return "127.0.0.1:8000"
+			}*/
+
+			for _, addr := range addrs {
+
+				ipnet, ok := addr.(*net.IPNet)
+
+				if ok && !ipnet.IP.IsLoopback() {
+
+					if ipnet.IP.To4() != nil {
+						return fmt.Sprintf("%s%s", ipnet.IP.String(), *port)
+					}
+					
+				}
+
 			}
+
+			return "127.0.0.1:8000"
 
 		}
 
