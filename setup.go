@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -11,20 +12,42 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-func getAddress(name string) string {
+func getMode() (string, error) {
+
+  switch *mode {
+
+	case MODE_WIFI:
+		return INTERFACE_WIFI, nil
+	case MODE_HOTSPOT:
+	  return INTERFACE_HOTSPOT, nil
+	case MODE_WIRED:
+	  return INTERFACE_WIRED, nil
+	case MODE_TEST:
+		return INTERFACE_TEST, nil
+	default:
+	  return INTERFACE_ERROR, errors.New("Unsupported mode of configuration")
+	}
+
+} // getMode
+
+
+func getAddress() (string, error) {
+
+  name, modeErr := getMode()
+
+	if modeErr != nil {
+		log.Fatal(modeErr)
+	}
 
   ifs, err := net.Interfaces()
 
 	if err != nil {
-		
-		log.Println(err)
-	  return ""
-
+		log.Fatal("Unable to identify interfaces", err)
 	}
 
 	for _, iface := range ifs {
 
-    if strings.HasPrefix(iface.Name, name) {
+		if strings.HasPrefix(iface.Name, name) {
 			
 			addrs, err := iface.Addrs()
 
@@ -33,39 +56,26 @@ func getAddress(name string) string {
 				break
 			}
 
-/*      if len(addrs) > 1 {
-
-				ipnet, ok := addrs[1].(*net.IPNet)
-
-				if ok {
-					return fmt.Sprintf("%s%s", ipnet.IP.String(), *port)
-				}
-				
-			} else {
-				return "127.0.0.1:8000"
-			}*/
-
 			for _, addr := range addrs {
 
 				ipnet, ok := addr.(*net.IPNet)
 
-				if ok && !ipnet.IP.IsLoopback() {
+				//if ok && !ipnet.IP.IsLoopback() {
+				if ok {
 
 					if ipnet.IP.To4() != nil {
-						return fmt.Sprintf("%s%s", ipnet.IP.String(), *port)
+						return fmt.Sprintf("%s%s", ipnet.IP.String(), *port), nil
 					}
 					
 				}
 
 			}
 
-			return "127.0.0.1:8000"
-
 		}
 
 	}
 
-	return ""
+	return DEFAULT_ADDRESS, errors.New("Unable to configure given mode, interface has no IP address")
 
 } // getAddress
 
@@ -74,9 +84,13 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
   switch r.Method {
 	case http.MethodGet:
 
-		log.Println("generate QR code")
+		log.Println("generating QR code...")
 		
-		ip := getAddress("en")
+		ip, err := getAddress()
+
+		if err != nil {
+			log.Fatal(err)
+		}
 		
 		err2 := qrcode.WriteFile(ip, qrcode.Medium, 512, "www/qr.png")
 
@@ -86,7 +100,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 
 		compiler := amber.New()
 
-	  parseErr := compiler.ParseFile("www/setup.amber")
+		parseErr := compiler.ParseFile("www/setup.amber")
 
 		if parseErr != nil {
 			
@@ -106,9 +120,8 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		template.Execute(w, nil)
+		template.Execute(w, nil)		
 
-		
 	default:
 	  w.WriteHeader(http.StatusMethodNotAllowed)
 	}

@@ -13,20 +13,33 @@ import (
 )
 
 const (
-	APPNAME = "mboard-go v%s"
-	VERSION = "0.1"
+	APPNAME 					= "mboard-go v%s"
+	DEFAULT_ADDRESS 	= "127.0.0.1:8000"
+	VERSION 					= "0.1"
+)
+
+const (
+	MODE_WIFI				= 0
+	MODE_HOTSPOT   	= 1
+	MODE_WIRED      = 2
+	MODE_TEST   		= 3
+)
+
+const (
+	INTERFACE_WIFI 		= "en"
+	INTERFACE_HOTSPOT	= "wlan"
+	INTERFACE_WIRED   = "eth"
+	INTERFACE_TEST		= "lo"
+	INTERFACE_ERROR   = ""
 )
 
 var database 	= flag.String("database", "./db/med.db", "database address")
-var iface 		= flag.String("iface", "en", "network interface")
 var port 			= flag.String("port", ":8000", "service port")
-var test      = flag.Bool("test", false, "test configuration")
+var mode      = flag.Int("mode", MODE_WIFI, "configuration mode")
 
 var testTmpl = template.Must(template.ParseFiles("www/test.html"))
 
 var data *sql.DB = nil
-
-//var SUPPORT_IFACES = ["en0", "eth0"]
 
 func version() string {
   return fmt.Sprintf(APPNAME, VERSION)
@@ -81,14 +94,12 @@ func main() {
 
   flag.Parse()
 
-	var addr = ""
+	addr, err := getAddress()
 
-	if *test {
-		addr = fmt.Sprintf("127.0.0.1%s", *port)
-	} else {
-		addr = getAddress("en")
+	if err != nil {
+		log.Fatal(err)
 	}
-
+	
   log.Printf("[%s] listening on address %s", version(), addr)
 
   initDatabase()

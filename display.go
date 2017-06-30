@@ -14,9 +14,15 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 
 		data := make(map[string]string)
 
-		data["base"] = getAddress("en")
+		addr, addrErr := getAddress()
 
-    log.Println(data)
+		if addrErr != nil {
+			log.Println(addrErr)
+			return
+		}
+
+		data["base"] = addr
+
 	  compiler := amber.New()
 
 		err := compiler.ParseFile("www/display.amber")
