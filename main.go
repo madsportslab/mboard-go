@@ -97,10 +97,6 @@ func initRouter() *mux.Router {
 func main() {
 
   flag.Parse()
-
-	/*if (*port)[0] != ':' {
-		*port = fmt.Sprintf(":%s", *port)
-	}*/
 	
 	addr, err := getAddress()
 

@@ -42,7 +42,7 @@ func getAddress() (string, error) {
 	}
 
 	if name == INTERFACE_CLOUD {
-		return fmt.Sprintf("%s:%s/%s", CLOUD_ADDRESS, *port, MBOARD), nil
+		return fmt.Sprintf(":%s/%s", *port, MBOARD), nil
 	}
 
   ifs, err := net.Interfaces()
