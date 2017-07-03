@@ -40,6 +40,9 @@ const (
 var database 	= flag.String("database", "./db/med.db", "database address")
 var port 			= flag.String("port", "8000", "service port")
 var mode      = flag.Int("mode", MODE_WIFI, "configuration mode")
+var ssl       = flag.Bool("ssl", false, "use SSL encryption")
+var certFile  = flag.String("cert", "ssl.crt", "SSL certificate")
+var keyFile   = flag.String("key", "ssl.key", "SSL private key")
 
 var testTmpl = template.Must(template.ParseFiles("www/test.html"))
 
@@ -104,12 +107,16 @@ func main() {
 		log.Fatal(err)
 	}
 	
-  log.Printf("[%s] listening on address %s", version(), addr)
+  log.Printf("[%s] listening on port %s", version(), *port)
 
   initDatabase()
 
   router := initRouter()
 
-	log.Fatal(http.ListenAndServe(addr, router))
+	if *ssl {
+		log.Fatal(http.ListenAndServeTLS(addr, *certFile, *keyFile, router))
+	} else {
+		log.Fatal(http.ListenAndServe(addr, router))
+	}
 
 } // main
