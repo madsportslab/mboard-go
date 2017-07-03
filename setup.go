@@ -64,7 +64,7 @@ func getAddress() (string, error) {
 				if ok {
 
 					if ipnet.IP.To4() != nil {
-						return fmt.Sprintf("%s%s", ipnet.IP.String(), *port), nil
+						return fmt.Sprintf("%s:%s", ipnet.IP.String(), *port), nil
 					}
 					
 				}

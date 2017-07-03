@@ -34,7 +34,7 @@ const (
 )
 
 var database 	= flag.String("database", "./db/med.db", "database address")
-var port 			= flag.String("port", ":8000", "service port")
+var port 			= flag.String("port", "8000", "service port")
 var mode      = flag.Int("mode", MODE_WIFI, "configuration mode")
 
 var testTmpl = template.Must(template.ParseFiles("www/test.html"))
@@ -94,6 +94,10 @@ func main() {
 
   flag.Parse()
 
+	/*if (*port)[0] != ':' {
+		*port = fmt.Sprintf(":%s", *port)
+	}*/
+	
 	addr, err := getAddress()
 
 	if err != nil {
