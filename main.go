@@ -32,12 +32,12 @@ const (
 	INTERFACE_WIFI 		= "en"
 	INTERFACE_HOTSPOT	= "wlan"
 	INTERFACE_WIRED   = "eth"
-	INTERFACE_TEST		= "lo"
 	INTERFACE_CLOUD   = "cloud"
+	INTERFACE_TEST		= "lo"
 	INTERFACE_ERROR   = ""
 )
 
-var database 	= flag.String("database", "./db/med.db", "database address")
+var database 	= flag.String("database", "./db/md.db", "database address")
 var port 			= flag.String("port", "8000", "service port")
 var mode      = flag.Int("mode", MODE_WIFI, "configuration mode")
 var ssl       = flag.Bool("ssl", false, "use SSL encryption")

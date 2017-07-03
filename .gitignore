@@ -4,5 +4,5 @@ jquery
 bootstrap
 bootstrap-select
 font-awesome
-db/med.db
+db/*.db
 www/qr.png

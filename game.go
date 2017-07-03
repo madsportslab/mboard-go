@@ -189,6 +189,11 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 		id := addGame()
 
+		if id == -1 {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		h := initTeam(config.Home, config.Timeouts)
 		a := initTeam(config.Away, config.Timeouts)
 
