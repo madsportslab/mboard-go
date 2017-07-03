@@ -24,6 +24,8 @@ func getMode() (string, error) {
 	  return INTERFACE_WIRED, nil
 	case MODE_TEST:
 		return INTERFACE_TEST, nil
+	case MODE_CLOUD:
+	  return INTERFACE_CLOUD, nil
 	default:
 	  return INTERFACE_ERROR, errors.New("Unsupported mode of configuration")
 	}
@@ -37,6 +39,10 @@ func getAddress() (string, error) {
 
 	if modeErr != nil {
 		log.Fatal(modeErr)
+	}
+
+	if name == INTERFACE_CLOUD {
+		return fmt.Sprintf("%s:%s/%s", CLOUD_ADDRESS, *port, MBOARD), nil
 	}
 
   ifs, err := net.Interfaces()
@@ -75,7 +81,7 @@ func getAddress() (string, error) {
 
 	}
 
-	return DEFAULT_ADDRESS, errors.New("Unable to configure given mode, interface has no IP address")
+	return TEST_ADDRESS, errors.New("Unable to configure given mode, interface has no IP address")
 
 } // getAddress
 

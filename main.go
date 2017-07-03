@@ -14,7 +14,9 @@ import (
 
 const (
 	APPNAME 					= "mboard-go v%s"
-	DEFAULT_ADDRESS 	= "127.0.0.1:8000"
+	TEST_ADDRESS 	    = "127.0.0.1:8000"
+	CLOUD_ADDRESS     = "madsportslab.com"
+	MBOARD            = "mboard"
 	VERSION 					= "0.1"
 )
 
@@ -22,7 +24,8 @@ const (
 	MODE_WIFI				= 0
 	MODE_HOTSPOT   	= 1
 	MODE_WIRED      = 2
-	MODE_TEST   		= 3
+	MODE_CLOUD      = 3
+	MODE_TEST   		= 4
 )
 
 const (
@@ -30,6 +33,7 @@ const (
 	INTERFACE_HOTSPOT	= "wlan"
 	INTERFACE_WIRED   = "eth"
 	INTERFACE_TEST		= "lo"
+	INTERFACE_CLOUD   = "cloud"
 	INTERFACE_ERROR   = ""
 )
 
