@@ -44,7 +44,7 @@ var ssl       = flag.Bool("ssl", false, "use SSL encryption")
 var certFile  = flag.String("cert", "ssl.crt", "SSL certificate")
 var keyFile   = flag.String("key", "ssl.key", "SSL private key")
 
-var testTmpl = template.Must(template.ParseFiles("www/test.html"))
+var testTmpl = template.Must(template.ParseFiles("mboard-www/test.html"))
 
 var data *sql.DB = nil
 
@@ -72,8 +72,8 @@ func initRouter() *mux.Router {
 
   router := mux.NewRouter()
 
-  router.PathPrefix("/www/").Handler(http.StripPrefix("/www/",
-    http.FileServer(http.Dir("./www"))))
+  router.PathPrefix("/mboard-www/").Handler(http.StripPrefix("/mboard-www/",
+    http.FileServer(http.Dir("./mboard-www"))))
 
 	router.HandleFunc("/api/games", gameHandler)
 	router.HandleFunc("/api/games/{id:[0-9a-f]+}", gameHandler)

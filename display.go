@@ -25,7 +25,7 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 
 	  compiler := amber.New()
 
-		err := compiler.ParseFile("www/display.amber")
+		err := compiler.ParseFile("mboard-www/display.amber")
 
 		if err != nil {
 			
