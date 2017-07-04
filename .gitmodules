@@ -1,0 +1,3 @@
+[submodule "mboard-www"]
+	path = mboard-www
+	url = git@gh:madsportslab/mboard-www
