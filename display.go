@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
   "net/http"
 
@@ -22,6 +23,12 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		data["base"] = addr
+
+		
+		data["shot"] = fmt.Sprintf("%d", game.Settings.Shot)
+
+		log.Println("shotclock")
+		log.Println(data["shot"])
 
 	  compiler := amber.New()
 

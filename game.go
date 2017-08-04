@@ -67,7 +67,7 @@ func parseConfig(r *http.Request) *Config {
     config := Config{
 			Periods: 		4,
 			Minutes:		1,
-			Shot:				24,
+			Shot:				-1,
 			Timeouts:		3,
 			Fouls:			10,
 			Home:				HOME,

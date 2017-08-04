@@ -51,8 +51,10 @@ func (gc *GameClocks) Run() {
 	for _ = range gc.Ticker.C {
 
 		if gc.ShotClock.Seconds == game.Settings.Shot {
+
 			gc.ShotClock.Tenths 	= 0
 			gc.ShotClock.Seconds 	= 0
+		
 		}
 
 		if gc.PlayClock.Tenths == 9 {
@@ -77,7 +79,7 @@ func (gc *GameClocks) Run() {
 			gc.FinalChan <- true
 		}
 
-		if gc.ShotClock.Seconds == game.Settings.Shot {
+		if gc.ShotClock.Seconds == game.Settings.Shot && game.Settings.Shot != -1 {
 			gc.ShotViolationChan <- true
 		}
 
@@ -170,7 +172,7 @@ func (gc *GameClocks) StepShotClock(ticks int) {
 		gc.ShotClock.Seconds = total
 	}
 
-	if gc.ShotClock.Seconds == game.Settings.Shot {
+	if gc.ShotClock.Seconds == game.Settings.Shot && game.Settings.Shot != -1 {
 		gc.ShotViolationChan <- true
 	}
 
