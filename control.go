@@ -253,15 +253,36 @@ func setPossession(name string) {
 
 		notify(WS_RET_POSSESSION_HOME, "")
 
-	} else {
+	} else if name == AWAY {
 		
 		game.GameData.Possession = false
 
 		notify(WS_RET_POSSESSION_AWAY, "")
 
+	} else {
+		log.Println("Error: setPossession(), invalid possession string.")
 	}
 
+	game.GameData.Clk.ShotClockReset()
+	game.GameData.Clk.Start()
+
 } // setPossession
+
+func togglePossession() {
+
+	if game.GameData.Possession {
+		
+		game.GameData.Possession = false
+		notify(WS_RET_POSSESSION_AWAY, "")
+
+	} else {
+		game.GameData.Possession = true
+	  notify(WS_RET_POSSESSION_AWAY, "")
+	}
+
+	game.GameData.Clk.ShotClockReset()
+
+}
 
 func firehose(game *GameInfo) {
 
@@ -271,7 +292,11 @@ func firehose(game *GameInfo) {
 		case <-game.GameData.Clk.ShotViolationChan:
 		
 		  game.GameData.Clk.Ticker.Stop()
+			
+			// TODO: play sound
 			notify(WS_RET_SHOT_VIOLATION, "1")
+			togglePossession()
+			
 		
 		case <-game.GameData.Clk.FinalChan:
 

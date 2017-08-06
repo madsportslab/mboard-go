@@ -27,7 +27,7 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 		if game != nil {
 			data["shot"] = fmt.Sprintf("%d", game.Settings.Shot)
 		} else {
-			data["shot"] = 24
+			data["shot"] = "24"
 		}
 
 	  compiler := amber.New()
