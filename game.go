@@ -26,6 +26,28 @@ const (
 	SHOT      = "shot"
 )
 
+const (
+
+	GameCreate = "INSERT into games DEFAULT VALUES"
+
+  GameDelete = "DELETE from games WHERE id=?"
+	
+	GameGet = "SELECT " +
+	  "id, data, status, created, updated " +
+		"FROM games " +
+		"WHERE id=?"
+
+	GamesGet = "SELECT " +
+	  "id, data, status, created, updated " + 
+		"FROM games " +
+		"ORDER BY created DESC"
+
+	GameUpdate = "UPDATE games " +
+	  "SET data=?, updated=CURRENT_TIMESTAMP, status=? " +
+		"WHERE id=?"
+
+)
+
 type Config struct {
   Periods			int 		`json:"periods"`
   Minutes			int 		`json:"minutes"`

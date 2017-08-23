@@ -37,7 +37,7 @@ const (
 	INTERFACE_ERROR   = ""
 )
 
-var database 	= flag.String("database", "./db/md.db", "database address")
+var database 	= flag.String("database", "./data/mboard.db", "database address")
 var port 			= flag.String("port", "8000", "service port")
 var mode      = flag.Int("mode", MODE_WIFI, "configuration mode")
 var ssl       = flag.Bool("ssl", false, "use SSL encryption")
@@ -79,6 +79,7 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/api/games/{id:[0-9a-f]+}", gameHandler)
   router.HandleFunc("/api/scores", scoreHandler)
 	router.HandleFunc("/api/scores/{id:[0-9a-f]+}", scoreHandler)
+	router.HandleFunc("/api/scores/{id:[0-9a-f]+}/logs", logHandler)
 	router.HandleFunc("/api/version", versionHandler)
 
 	// management apis

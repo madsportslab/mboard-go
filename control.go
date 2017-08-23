@@ -76,7 +76,8 @@ type Notification struct {
 
 type Req struct {
 	Cmd					string 			`json:"cmd"`
-	Step				int					`json:"step"`        
+	Step				int					`json:"step"`
+	Meta        map[string]interface{}      `json:"meta"`
 }
 
 var periodNames = []string{"1st", "2nd", "3rd", "4th"}
@@ -108,8 +109,6 @@ func calcTotalScore(home bool) int {
 } // calcTotalScore
 
 func notify(key string, val string) {
-
-	log.Println(key, val)
 
 	n := Notification{
 		Key: key,
@@ -245,42 +244,53 @@ func incrementPeriod(val int) {
 
 } // incrementPeriod
 
-func setPossession(name string) {
+func setPossession(name string, stopClock bool) {
 
   if name == HOME {
  	 	
 		game.GameData.Possession = true
 
-		notify(WS_RET_POSSESSION_HOME, "")
+		notify(WS_RET_POSSESSION_HOME, fmt.Sprintf("%b", stopClock))
 
 	} else if name == AWAY {
 		
 		game.GameData.Possession = false
 
-		notify(WS_RET_POSSESSION_AWAY, "")
+		notify(WS_RET_POSSESSION_AWAY, fmt.Sprintf("%b", stopClock))
 
 	} else {
 		log.Println("Error: setPossession(), invalid possession string.")
 	}
 
 	game.GameData.Clk.ShotClockReset()
-	game.GameData.Clk.Start()
+
+	if stopClock {
+		game.GameData.Clk.Stop()
+	} else {
+		game.GameData.Clk.Start()
+	}
 
 } // setPossession
 
-func togglePossession() {
+func togglePossession(stopClock bool) {
 
 	if game.GameData.Possession {
 		
 		game.GameData.Possession = false
-		notify(WS_RET_POSSESSION_AWAY, "")
+		notify(WS_RET_POSSESSION_AWAY, fmt.Sprintf("%b", stopClock))
 
 	} else {
 		game.GameData.Possession = true
-	  notify(WS_RET_POSSESSION_AWAY, "")
+	  notify(WS_RET_POSSESSION_HOME, fmt.Sprintf("%b", stopClock))
 	}
 
 	game.GameData.Clk.ShotClockReset()
+
+	if stopClock {
+		game.GameData.Clk.Stop()
+	} else {
+		game.GameData.Clk.Start()
+	}
 
 }
 
@@ -295,7 +305,7 @@ func firehose(game *GameInfo) {
 			
 			// TODO: play sound
 			notify(WS_RET_SHOT_VIOLATION, "1")
-			togglePossession()
+			togglePossession(true)
 			
 		
 		case <-game.GameData.Clk.FinalChan:
@@ -328,10 +338,8 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	log.Println(game)
-
 	if game.Settings == nil {
-		log.Println("shat")
+		log.Println("game.Settings is nil")
 		return
 	}
 
@@ -363,7 +371,7 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 		json.Unmarshal(msg, &req)
 
-		log.Println(req.Cmd)
+		put(fmt.Sprintf("%d", game.ID), req)
 
 		switch req.Cmd {
 		case WS_CLOCK_START:
@@ -391,10 +399,10 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		  incrementPeriod(-1)
 
 		case WS_POSSESSION_HOME:
-			setPossession(HOME)
+			setPossession(HOME, req.Meta["stop"].(bool))
 
 		case WS_POSSESSION_AWAY:
-		  setPossession(AWAY)
+		  setPossession(AWAY, req.Meta["stop"].(bool))
 
 		case WS_FINAL:
 			game.Final = true
@@ -406,15 +414,9 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 			// close connections and channels
 		
 		case WS_SCORE_HOME:
-
-		  log.Println(req.Step)
-
       incrementPoints(HOME, req.Step)
 
     case WS_SCORE_AWAY:
-
-		  log.Println(req.Step)
-
       incrementPoints(AWAY, req.Step)
 
 		case WS_FOUL_HOME_UP:

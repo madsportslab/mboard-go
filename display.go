@@ -24,7 +24,7 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 
 		data["base"] = addr
 
-		if game != nil {
+		if game.Settings != nil {
 			data["shot"] = fmt.Sprintf("%d", game.Settings.Shot)
 		} else {
 			data["shot"] = "24"
