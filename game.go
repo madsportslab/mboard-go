@@ -76,6 +76,7 @@ type GameState struct {
 	Away          *Team			`json:"away"`
 	GameClock     *Clock    `json:"game"`
 	ShotClock     *Clock    `json:"shot"`
+	ID            int64     `json:"id"`
 }
 
 type GameRes struct {
@@ -251,6 +252,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 					Away: game.GameData.Away,
 					GameClock: game.GameData.Clk.PlayClock,
 					ShotClock: game.GameData.Clk.ShotClock,
+					ID: game.ID,
 				}
 
 				j, jsonErr := json.Marshal(gs)
