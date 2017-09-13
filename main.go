@@ -7,6 +7,7 @@ import (
 	"text/template"
   "log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
@@ -17,7 +18,7 @@ const (
 	TEST_ADDRESS 	    = "127.0.0.1:8000"
 	CLOUD_ADDRESS     = "madsportslab.com"
 	MBOARD            = "mboard"
-	VERSION 					= "0.1"
+	VERSION 					= "0.0.1"
 )
 
 const (
@@ -43,6 +44,7 @@ var mode      = flag.Int("mode", MODE_WIFI, "configuration mode")
 var ssl       = flag.Bool("ssl", false, "use SSL encryption")
 var certFile  = flag.String("cert", "ssl.crt", "SSL certificate")
 var keyFile   = flag.String("key", "ssl.key", "SSL private key")
+var v         = flag.Bool("v", false, "version")
 
 var testTmpl = template.Must(template.ParseFiles("mboard-www/test.html"))
 
@@ -102,6 +104,11 @@ func main() {
 
   flag.Parse()
 	
+	if *v {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
+
 	addr, err := getAddress()
 
 	if err != nil {
