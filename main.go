@@ -18,7 +18,7 @@ const (
 	TEST_ADDRESS 	    = "127.0.0.1:8000"
 	CLOUD_ADDRESS     = "madsportslab.com"
 	MBOARD            = "mboard"
-	VERSION 					= "0.0.1"
+	VERSION 					= "0.1.0"
 )
 
 const (
