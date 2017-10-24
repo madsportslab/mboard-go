@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/skip2/go-qrcode"
 )
 
 const (
@@ -74,8 +75,8 @@ func initRouter() *mux.Router {
 
   router := mux.NewRouter()
 
-  router.PathPrefix("/mboard-www/").Handler(http.StripPrefix("/mboard-www/",
-    http.FileServer(http.Dir("./mboard-www"))))
+  //router.PathPrefix("/mboard-www/").Handler(http.StripPrefix("/mboard-www/",
+    //http.FileServer(http.Dir("./mboard-www"))))
 
 	router.HandleFunc("/api/games", gameHandler)
 	router.HandleFunc("/api/games/{id:[0-9a-f]+}", gameHandler)
@@ -94,11 +95,33 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/setup", setupHandler)
 
 	//router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)
-  router.HandleFunc("/ws/game", controlHandler)
+	router.HandleFunc("/ws/game", controlHandler)
+	
+	router.Handle("/qr.png", http.FileServer(http.Dir(".")))
 
   return router
 
 } // initRouter
+
+func generateQR() {
+
+	log.Println("generating QR code...")
+	
+	ip, err := getAddress()
+
+	if err != nil {
+		log.Fatal(err)
+	} else {
+
+		err := qrcode.WriteFile(ip, qrcode.Medium, 512, "qr.png")
+		
+		if err != nil {
+			log.Println(err)
+		}
+
+	}
+
+} // generateQR
 
 func main() {
 
@@ -108,19 +131,17 @@ func main() {
 		fmt.Println(VERSION)
 		os.Exit(0)
 	}
-
-	addr, err := getAddress()
-
-	if err != nil {
-		log.Fatal(err)
-	}
 	
+	generateQR()
+
   log.Printf("[%s] listening on port %s", version(), *port)
 
   initDatabase()
 
   router := initRouter()
 
+	addr := fmt.Sprintf(":%s", *port)
+	
 	if *ssl {
 		log.Fatal(http.ListenAndServeTLS(addr, *certFile, *keyFile, router))
 	} else {

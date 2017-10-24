@@ -5,5 +5,5 @@ bootstrap
 bootstrap-select
 font-awesome
 data/mboard.db
-www/qr.png
+qr.png
 test.log

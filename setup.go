@@ -98,7 +98,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		
-		err2 := qrcode.WriteFile(ip, qrcode.Medium, 512, "mboard-www/qr.png")
+		err2 := qrcode.WriteFile(ip, qrcode.Medium, 512, "qr.png")
 
 		if err2 != nil {
 			log.Println(err2)
