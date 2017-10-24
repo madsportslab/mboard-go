@@ -47,8 +47,6 @@ var certFile  = flag.String("cert", "ssl.crt", "SSL certificate")
 var keyFile   = flag.String("key", "ssl.key", "SSL private key")
 var v         = flag.Bool("v", false, "version")
 
-var testTmpl = template.Must(template.ParseFiles("mboard-www/test.html"))
-
 var data *sql.DB = nil
 
 func version() string {
