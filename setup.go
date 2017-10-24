@@ -90,20 +90,6 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
   switch r.Method {
 	case http.MethodGet:
 
-		log.Println("generating QR code...")
-		
-		ip, err := getAddress()
-
-		if err != nil {
-			log.Fatal(err)
-		}
-		
-		err2 := qrcode.WriteFile(ip, qrcode.Medium, 512, "qr.png")
-
-		if err2 != nil {
-			log.Println(err2)
-		}
-
 		compiler := amber.New()
 
 		parseErr := compiler.ParseFile("mboard-www/setup.amber")
