@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"text/template"
   "log"
 	"net/http"
 	"os"
@@ -53,10 +52,6 @@ func version() string {
   return fmt.Sprintf(APPNAME, VERSION)
 } // version
 
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	testTmpl.Execute(w, nil)
-} // testHandler
-
 func initDatabase() {
 
   db, err := sql.Open("sqlite3", *database)
@@ -89,7 +84,6 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/api/mgmt/machine", machineHandler)
 	
 	router.HandleFunc("/display", displayHandler)
-	router.HandleFunc("/test", testHandler)
 	router.HandleFunc("/setup", setupHandler)
 
 	//router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/eknkc/amber"
-	"github.com/skip2/go-qrcode"
 )
 
 func getMode() (string, error) {
