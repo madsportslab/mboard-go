@@ -18,6 +18,7 @@ create table if not exists logs(
   id INTEGER NOT NULL PRIMARY KEY,
   game_id INTEGER,
   msg VARCHAR,
+  clock VARCHAR,
   created DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY(game_id) REFERENCES games(id)

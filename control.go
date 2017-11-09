@@ -89,6 +89,7 @@ type Req struct {
 	Step				int					`json:"step"`
 	Meta        map[string]interface{}      `json:"meta"`
 	Reason      string      `json:"reason"`
+	Timestamp   string      `json:"timestamp"`
 }
 
 var periodNames = []string{"1st", "2nd", "3rd", "4th"}
@@ -502,9 +503,10 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		  log.Printf("[%s][Error] unsupported command: %s", version(), string(msg))
 		}
 
-		log.Println(req)
+		log.Println(game.GameData.Clk.PlayClock.Tenths)
+		log.Println(game.GameData.Clk.PlayClock.Seconds)
 
-		put(fmt.Sprintf("%d", game.ID), req)
+		put(fmt.Sprintf("%d", game.ID), game.GameData.Clk.PlayClock, req)
 
 	}
 
