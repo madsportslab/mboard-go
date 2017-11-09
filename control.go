@@ -23,6 +23,7 @@ const (
 	WS_POSSESSION_AWAY  = "POSSESSION_AWAY"
 	WS_FINAL            = "FINAL"
 	WS_ABORT      			= "ABORT"
+	WS_UNDO             = "UNDO"
 )
 
 const (
@@ -32,25 +33,34 @@ const (
 	WS_FOUL_HOME_DOWN   			=	"FOUL_HOME_DOWN"
 	WS_FOUL_AWAY_UP     			= "FOUL_AWAY_UP"
 	WS_FOUL_AWAY_DOWN   			= "FOUL_AWAY_DOWN"
-	WS_TIMEOUT_HOME_UP  			= "TIMEOUT_HOME_UP"
-	WS_TIMEOUT_HOME_DOWN     	= "TIMEOUT_HOME_DOWN"
-	WS_TIMEOUT_AWAY_UP       	= "TIMEOUT_AWAY_UP"
-	WS_TIMEOUT_AWAY_DOWN     	= "TIMEOUT_AWAY_DOWN"
+	WS_TIMEOUT_HOME  					= "TIMEOUT_HOME"
+	WS_TIMEOUT_HOME_CANCEL   	= "TIMEOUT_HOME_CANCEL"
+	WS_TIMEOUT_AWAY       		= "TIMEOUT_AWAY"
+	WS_TIMEOUT_AWAY_CANCEL    = "TIMEOUT_AWAY_CANCEL"
 )
 
 const (
-	WS_RET_POSSESSION_HOME    = "POSSESSION_HOME"
-	WS_RET_POSSESSION_AWAY    = "POSSESSION_AWAY"
-	WS_RET_HOME_SCORE    			= "HOME_SCORE"
-	WS_RET_AWAY_SCORE    			= "AWAY_SCORE"
-	WS_RET_CLOCK              = "CLOCK"
-	WS_RET_PERIOD             = "PERIOD"
-	WS_RET_HOME_FOUL          = "HOME_FOUL"
-	WS_RET_AWAY_FOUL          = "AWAY_FOUL"
-	WS_RET_HOME_TIMEOUT       = "HOME_TIMEOUT"
-	WS_RET_AWAY_TIMEOUT       = "AWAY_TIMEOUT"
-	WS_RET_SHOT_VIOLATION     = "SHOT_VIOLATION"
-	WS_RET_END_PERIOD         = "END_PERIOD"
+	WS_RET_POSSESSION_HOME    	= "POSSESSION_HOME"
+	WS_RET_POSSESSION_AWAY    	= "POSSESSION_AWAY"
+	WS_RET_HOME_SCORE    				= "HOME_SCORE"
+	WS_RET_AWAY_SCORE    				= "AWAY_SCORE"
+	WS_RET_CLOCK              	= "CLOCK"
+	WS_RET_PERIOD             	= "PERIOD"
+	WS_RET_HOME_FOUL          	= "HOME_FOUL"
+	WS_RET_AWAY_FOUL          	= "AWAY_FOUL"
+	WS_RET_HOME_TIMEOUT       	= "HOME_TIMEOUT"
+	WS_RET_HOME_TIMEOUT_CANCEL  = "HOME_TIMEOUT_CANCEL"
+	WS_RET_AWAY_TIMEOUT       	= "AWAY_TIMEOUT"
+	WS_RET_AWAY_TIMEOUT_CANCEL  = "AWAY_TIMEOUT_CANCEL"
+	WS_RET_TIMEOUT_FAIL_MAX     = "TIMEOUT_FAILURE_MAX"
+	WS_RET_TIMEOUT_FAIL_NONE  	= "TIMEOUT_FAILURE_NONE"
+	WS_RET_SHOT_VIOLATION     	= "SHOT_VIOLATION"
+	WS_RET_END_PERIOD         	= "END_PERIOD"
+)
+
+const (
+	MSG_MAX_TIMEOUTS				= "Maximum timeouts reached."
+	MSG_NO_TIMEOUTS         = "No timeouts remaining."
 )
 
 type Team struct {
@@ -78,6 +88,7 @@ type Req struct {
 	Cmd					string 			`json:"cmd"`
 	Step				int					`json:"step"`
 	Meta        map[string]interface{}      `json:"meta"`
+	Reason      string      `json:"reason"`
 }
 
 var periodNames = []string{"1st", "2nd", "3rd", "4th"}
@@ -198,34 +209,64 @@ func incrementFoul(name string, val int) {
 
 } // incrementFoul
 
-func incrementTimeout(name string, val int) {
+func incrementTimeout(name string, val int) bool {
 
   if game == nil {
-		return
+		return false
 	}
 
   if name == HOME {
 
-		if (game.Settings.Timeouts - (game.GameData.Home.Timeouts + val) < 0) ||
-		  (game.GameData.Home.Timeouts + val < 0) {
-			return
+		if game.GameData.Home.Timeouts + val < 0 {
+				
+			return false
+
+		} else if game.Settings.Timeouts < (game.GameData.Home.Timeouts + val) {
+		
+			return false
+
+		} else {
+		
+			game.GameData.Home.Timeouts = game.GameData.Home.Timeouts + val
+			
+			if val == -1 {
+				notify(WS_RET_HOME_TIMEOUT, fmt.Sprintf(
+					"%d", game.GameData.Home.Timeouts))
+			} else if val == 1 {
+				notify(WS_RET_HOME_TIMEOUT_CANCEL, fmt.Sprintf(
+					"%d", game.GameData.Home.Timeouts))
+			}
+
+			return true
+
 		}
-
-		game.GameData.Home.Timeouts = game.GameData.Home.Timeouts + val
-
-		notify(WS_RET_HOME_TIMEOUT, fmt.Sprintf("%d", game.GameData.Home.Timeouts))
 		
 	} else if name == AWAY {
 
-		if (game.Settings.Timeouts - (game.GameData.Away.Timeouts + val) < 0) ||
-		  (game.GameData.Away.Timeouts + val < 0) {
-			return
-		}
+		if game.GameData.Away.Timeouts + val < 0 {
 
-		game.GameData.Away.Timeouts = game.GameData.Away.Timeouts + val
+			return false
 
-		notify(WS_RET_AWAY_TIMEOUT, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
+		} else if game.Settings.Timeouts < (game.GameData.Away.Timeouts + val) {
+			
+			return false
 
+		} else {
+
+			game.GameData.Away.Timeouts = game.GameData.Away.Timeouts + val
+			
+			if val == -1 {
+				notify(WS_RET_AWAY_TIMEOUT, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
+			} else {
+				notify(WS_RET_AWAY_TIMEOUT_CANCEL, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
+			}
+	
+			return true
+			
+		}	
+
+	} else {
+		return false
 	}
 
 } // incrementTimeout
@@ -292,7 +333,7 @@ func togglePossession(stopClock bool) {
 		game.GameData.Clk.Start()
 	}
 
-}
+ }
 
 func firehose(game *GameInfo) {
 
@@ -370,9 +411,7 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
     req := Req{}
 
 		json.Unmarshal(msg, &req)
-
-		put(fmt.Sprintf("%d", game.ID), req)
-
+		
 		switch req.Cmd {
 		case WS_CLOCK_START:
 			go game.GameData.Clk.Start()
@@ -431,21 +470,41 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		case WS_FOUL_AWAY_DOWN:
 			incrementFoul(AWAY, -1)
 
-		case WS_TIMEOUT_HOME_UP:
-			incrementTimeout(HOME, -1)
+		case WS_TIMEOUT_HOME:
+			
+			if !incrementTimeout(HOME, -1) {
+				req.Reason = MSG_NO_TIMEOUTS
+			} else {
+				game.GameData.Clk.Stop()
+			}
+			
+		case WS_TIMEOUT_HOME_CANCEL:
+			
+			if !incrementTimeout(HOME, 1) {
+				req.Reason = MSG_MAX_TIMEOUTS
+			}
 
-		case WS_TIMEOUT_HOME_DOWN:
-			incrementTimeout(HOME, 1)
+		case WS_TIMEOUT_AWAY:
+			
+			if !incrementTimeout(AWAY, -1) {
+				req.Reason = MSG_NO_TIMEOUTS
+			} else {
+				game.GameData.Clk.Stop()
+			}
 
-		case WS_TIMEOUT_AWAY_UP:
-			incrementTimeout(AWAY, -1)
-
-		case WS_TIMEOUT_AWAY_DOWN:
-			incrementTimeout(AWAY, 1)
+		case WS_TIMEOUT_AWAY_CANCEL:
+			
+			if !incrementTimeout(AWAY, 1) {
+				req.Reason = MSG_MAX_TIMEOUTS
+			}
 		
 		default:
 		  log.Printf("[%s][Error] unsupported command: %s", version(), string(msg))
 		}
+
+		log.Println(req)
+
+		put(fmt.Sprintf("%d", game.ID), req)
 
 	}
 
