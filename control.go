@@ -90,6 +90,7 @@ type Req struct {
 	Meta        map[string]interface{}      `json:"meta"`
 	Reason      string      `json:"reason"`
 	Timestamp   string      `json:"timestamp"`
+	Period      int         `json:"period"`
 }
 
 var periodNames = []string{"1st", "2nd", "3rd", "4th"}
@@ -413,6 +414,8 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 		json.Unmarshal(msg, &req)
 		
+		req.Period = game.GameData.Period
+
 		switch req.Cmd {
 		case WS_CLOCK_START:
 			go game.GameData.Clk.Start()
@@ -502,9 +505,6 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		default:
 		  log.Printf("[%s][Error] unsupported command: %s", version(), string(msg))
 		}
-
-		log.Println(game.GameData.Clk.PlayClock.Tenths)
-		log.Println(game.GameData.Clk.PlayClock.Seconds)
 
 		put(fmt.Sprintf("%d", game.ID), game.GameData.Clk.PlayClock, req)
 
