@@ -1,0 +1,12 @@
+[Unit]
+Description=madsportslab mboard daemon
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/mboard/bin
+ExecStart=/home/mboard/bin/mboard-go
+
+[Install]
+WantedBy=multi-user.target
+
