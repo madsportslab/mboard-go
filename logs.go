@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -11,6 +12,7 @@ import (
 
 type Log struct {
 	ID          string  `json:"id"`
+	Clock       string  `json:"clock"`
 	Msg					string	`json:"msg"`
 	Created			string	`json:"created"`
 	Updated			string	`json:"updated"`
@@ -19,11 +21,11 @@ type Log struct {
 const (
 
 	LogCreate = "INSERT into logs" +
-	  "(game_id, msg) " + 
-		"VALUES ($1, $2)"
+	  "(game_id, clock, msg) " + 
+		"VALUES ($1, $2, $3)"
 	
 	LogGet = "SELECT " +
-	  "id, msg, created, updated " +
+	  "id, clock, msg, created, updated " +
 		"FROM logs " + 
 		"WHERE game_id=? ORDER BY created DESC"
 
@@ -31,7 +33,43 @@ const (
 
 )
 
-func put(game_id string, req Req) {
+func gameTime(clk *Clock) string {
+
+	m := 0
+	s := 0
+
+	if clk.Seconds != 0 {
+		m = clk.Seconds/60
+		s = clk.Seconds%60
+		log.Println(m)
+		log.Println(s)
+	}
+
+	if m < 10 {
+
+		if s == 60 {
+			return fmt.Sprintf("0%d:00.%d", m, clk.Tenths)
+		} else if s < 10 {
+			return fmt.Sprintf("0%d:0%d.%d", m, s, clk.Tenths)
+		} else {
+			return fmt.Sprintf("0%d:%d.%d", m, s, clk.Tenths)
+		}
+
+	} else {
+
+		if s == 60 {
+			return fmt.Sprintf("%d:00.%d", m, clk.Tenths)
+		} else if s < 10 {
+			return fmt.Sprintf("%d:0%d.%d", m, s, clk.Tenths)
+		} else {
+			return fmt.Sprintf("%d:%d.%d", m, s, clk.Tenths)
+		}
+
+	}
+
+} // gameTime
+
+func put(game_id string, clk *Clock, req Req) {
 
   j, errJson := json.Marshal(req)
 
@@ -41,7 +79,7 @@ func put(game_id string, req Req) {
 	}
 
   _, err := data.Exec(
-		LogCreate, game_id, j,
+		LogCreate, game_id, gameTime(clk), j,
 	)
 
 	if err != nil {
@@ -74,7 +112,7 @@ func get(game_id string) []Log {
 
 		l := Log{}
 
-		err := rows.Scan(&l.ID, &l.Msg, &l.Created, &l.Updated)
+		err := rows.Scan(&l.ID, &l.Clock, &l.Msg, &l.Created, &l.Updated)
 
 		if err == sql.ErrNoRows || err != nil {
 			
