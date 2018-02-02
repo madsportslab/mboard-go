@@ -1,38 +1,21 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
   "net/http"
 
 	"github.com/eknkc/amber"
 )
 
-func displayHandler(w http.ResponseWriter, r *http.Request) {
+func advertisementHandler(w http.ResponseWriter, r *http.Request) {
 
   switch r.Method {
   case http.MethodGet:
 
-		data := make(map[string]string)
+		compiler := amber.New()
 
-		addr, addrErr := getAddress()
-
-		if addrErr != nil {
-			log.Println(addrErr)
-			return
-		}
-
-		data["base"] = addr
-
-		if game.Settings != nil {
-			data["shot"] = fmt.Sprintf("%d", game.Settings.Shot)
-		} else {
-			data["shot"] = "24"
-		}
-
-	  compiler := amber.New()
-
-		err := compiler.ParseFile("mboard-www/display.amber")
+		err := compiler.ParseFile("mboard-www/advertisement.amber")
 
 		if err != nil {
 			
@@ -52,8 +35,6 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		log.Println(data)
-
 		template.Execute(w, data)
 
   case http.MethodPost:
@@ -63,4 +44,4 @@ func displayHandler(w http.ResponseWriter, r *http.Request) {
 	  w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 
-} // displayHandler
+} // advertisementHandler

@@ -69,26 +69,37 @@ func initRouter() *mux.Router {
   router := mux.NewRouter()
 
   router.PathPrefix("/mboard-www/").Handler(http.StripPrefix("/mboard-www/",
-    http.FileServer(http.Dir("./mboard-www"))))
+		http.FileServer(http.Dir("./mboard-www"))))
+		
+	router.PathPrefix("/blobs/").Handler(http.StripPrefix("/blobs/",
+		http.FileServer(http.Dir("./blobs"))))
 
 	router.HandleFunc("/api/games", gameHandler)
 	router.HandleFunc("/api/games/{id:[0-9a-f]+}", gameHandler)
   router.HandleFunc("/api/scores", scoreHandler)
 	router.HandleFunc("/api/scores/{id:[0-9a-f]+}", scoreHandler)
 	router.HandleFunc("/api/scores/{id:[0-9a-f]+}/logs", logHandler)
+	router.HandleFunc("/api/media", mediaHandler)
 	router.HandleFunc("/api/version", versionHandler)
+	//router.HandleFunc("/blobs/{id:[0-9a-f]+}", blobHandler)
 
 	// management apis
 
 	router.HandleFunc("/api/mgmt/details", detailsHandler)
 	router.HandleFunc("/api/mgmt/machine", machineHandler)
 	
-	router.HandleFunc("/display", displayHandler)
+	router.HandleFunc("/scoreboard", scoreboardHandler)
 	router.HandleFunc("/setup", setupHandler)
+	router.HandleFunc("/logo", logoHandler)
+	router.HandleFunc("/video/{id:[0-9a-f]+}", videoHandler)
+	router.HandleFunc("/photo", photoHandler)
+	router.HandleFunc("/advertisement", advertisementHandler)
 
 	//router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)
 	router.HandleFunc("/ws/game", controlHandler)
-
+	router.HandleFunc("/ws/subscriber", subscriberHandler)
+	router.HandleFunc("/ws/manager", managerHandler)
+	
   return router
 
 } // initRouter

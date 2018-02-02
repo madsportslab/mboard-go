@@ -129,7 +129,7 @@ func get(game_id string) []Log {
 
 } // get
 
-func delete(log_id string) bool {
+func del(log_id string) bool {
 
   _, err := data.Exec(
 		LogDelete, log_id,
