@@ -9,15 +9,17 @@ import (
 )
 
 type SubscriberResponse struct {
-	Page 			string			`json:"page"`
+	Page 			string							`json:"page"`
+	Options   map[string]string 	`json:"options"`
 }
 
 var subscribers map[*websocket.Conn] bool
 
-func relay(msg string) {
+func relay(msg string, options map[string] string) {
 
 	r := SubscriberResponse{
 		Page: msg,
+		Options: options,
 	}
 
 	j, err := json.Marshal(r)

@@ -14,31 +14,41 @@ import (
 const (
 
 	EXT_DOT     = "."
-	EXT_JPG			= ".jpg"
-	EXT_MP4			= ".mp4"
-	EXT_MOV     = ".mov"
-	EXT_PNG			= ".png"
+	EXT_AVI     = "avi"
+	EXT_JPG			= "jpg"
+	EXT_JPEG    = "jpeg"
+	EXT_M4A     = "m4a"
+	EXT_MP3     = "mp3"
+	EXT_MP4			= "mp4"
+	EXT_MOV     = "mov"
+	EXT_PNG			= "png"
+	EXT_AAC     = "aac"
 
 )
 
 const (
+	MEDIA_AUDIO 	= "AUDIO"
+	MEDIA_PHOTO   = "PHOTO"
+	MEDIA_VIDEO		= "VIDEO"
+	MEDIA_UNKNOWN = "UNKNOWN"
+)
 
-	MediaCreate = "INSERT into media(format_id, key, meta) " +
+const (
+
+	MediaCreate = "INSERT into media(key, meta, tags) " +
 	  "VALUES($1, $2, $3)"
 
   MediaDelete = "DELETE from media WHERE id=?"
 	
 	MediaGet = "SELECT " +
-	  "id, format_id, key, meta, created, updated " +
+	  "id, game_id, key, meta, tags, created, updated " +
 		"FROM media " +
 		"WHERE id=?"
 
 	MediaGetAll = "SELECT " +
-	  "id, format_id, key, meta, created, updated " + 
+	  "id, game_id, key, meta, tags, created, updated " + 
 		"FROM media " +
 		"ORDER BY created DESC"
-
-	FormatsGetAll = "SELECT id, name FROM formats"
 
 )
 
@@ -50,49 +60,44 @@ type MediaMeta struct {
 
 type Media struct {
 	ID					int   				`json:"id"`
-	FormatID 		int						`json:"formatId"`
+	GameID      sql.NullInt64 `json:"gameId"`
 	Key					string				`json:"key"`
 	Meta  			*MediaMeta		`json:"meta"`
+	Tag         string        `json:"tag"`
 	Created     string				`json:"created"`
 	Updated     string				`json:"updated"`
 }
 
-func getFormat(ext string) int  {
+var SUPPORTED_VIDEO = []string{EXT_AVI, EXT_MP4, EXT_MOV}
+var SUPPORTED_AUDIO = []string{EXT_MP3, EXT_AAC}
+var SUPPORTED_PHOTO = []string{EXT_JPEG, EXT_JPG, EXT_PNG}
+
+
+func findExt(exts []string, target string) bool {
+
+	for _, ext := range exts {
+		if EXT_DOT + ext == strings.ToLower(target) {
+			return true
+		}
+	}
+
+	return false
+
+} // findExt
+
+func getTag(ext string) string {
 	
-	rows, err := data.Query(FormatsGetAll)
-
-	if err != nil {
-
-		log.Println("getFormat(): ", err)
-		return 0
-
+	if findExt(SUPPORTED_VIDEO, ext) {
+		return MEDIA_VIDEO
+	} else if findExt(SUPPORTED_AUDIO, ext) {
+		return MEDIA_AUDIO
+	} else if findExt(SUPPORTED_PHOTO, ext) {
+		return MEDIA_PHOTO
+	} else {
+		return MEDIA_UNKNOWN
 	}
 
-	defer rows.Close()
-
-	for rows.Next() {
-
-		id 		:= 0
-		name	:= ""
-
-		err := rows.Scan(&id, &name)
-
-		if err == sql.ErrNoRows || err != nil {
-			
-			log.Println("getFormat(): ", err)
-			return 0
-
-		}
-
-		if strings.ToUpper(ext) == EXT_DOT + name {
-			return id
-		}
-
-	}
-
-	return 0
-
-} // getFormat
+} // getTag
 
 func getMeta(filename string, size int64) (*MediaMeta, error) {
 
@@ -110,20 +115,28 @@ func createMedia(key string, filename string, size int64) {
 
 	meta, err := getMeta(filename, size)
 
-	j, err := json.Marshal(meta)
-
 	if err != nil {
 		log.Println(err)
 	} else {
 
-		_, err := data.Exec(
-			MediaCreate, getFormat(meta.Ext), key, j,
-		)
-	
+		tag := getTag(meta.Ext)
+
+		j, err := json.Marshal(meta)
+
 		if err != nil {
 			log.Println(err)
-		}
+		} else {
 	
+			_, err := data.Exec(
+				MediaCreate, key, j, tag,
+			)
+		
+			if err != nil {
+				log.Println(err)
+			}
+		
+		}
+
 	}
 
 } // createMedia
@@ -155,8 +168,8 @@ func getMediaList() []Media {
 
 		jstr := ""
 
-		err := rows.Scan(&m.ID, &m.FormatID, &m.Key, &jstr, &m.Created,
-		  &m.Updated)
+		err := rows.Scan(&m.ID, &m.GameID, &m.Key, &jstr, &m.Tag, &m.Created,
+			&m.Updated)
 
 		if err == sql.ErrNoRows || err != nil {
 			
@@ -201,7 +214,7 @@ func mediaHandler(w http.ResponseWriter, r *http.Request) {
     form := r.MultipartForm
 
 		media := form.File["media"]
-		
+
 		for _, m := range media {
 
 			file, err := m.Open()
