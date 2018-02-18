@@ -8,16 +8,64 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type SubscriberResponse struct {
+type SubscriberMapResponse struct {
 	Page 			string							`json:"page"`
 	Options   map[string]string 	`json:"options"`
 }
 
+type SubscriberStringResponse struct {
+  Key 			string				`json:"key"`
+	Val				string				`json:"val"`
+}
+
+type SubscriberStateResponse struct {
+	Key				string				`json:"key"`
+	State     *GameState    `json:"state"`
+}
+
 var subscribers map[*websocket.Conn] bool
 
-func relay(msg string, options map[string] string) {
+func pushState(state *GameState) {
 
-	r := SubscriberResponse{
+	n := SubscriberStateResponse{
+		Key: WS_GAME_STATE,
+		State: state,
+	}
+
+	j, jsonErr := json.Marshal(n)
+
+	if jsonErr != nil {
+		log.Println(jsonErr)
+	}
+
+	for c, _ := range subscribers {
+		c.WriteMessage(websocket.TextMessage, j)
+	}
+
+} // pushState
+
+func pushString(key string, val string) {
+
+	n := SubscriberStringResponse{
+		Key: key,
+		Val: val,
+	}
+
+	j, jsonErr := json.Marshal(n)
+
+	if jsonErr != nil {
+		log.Println(jsonErr)
+	}
+
+	for c, _ := range subscribers {
+		c.WriteMessage(websocket.TextMessage, j)
+	}
+
+} // pushString
+
+func pushMap(msg string, options map[string] string) {
+
+	r := SubscriberMapResponse{
 		Page: msg,
 		Options: options,
 	}
@@ -33,7 +81,7 @@ func relay(msg string, options map[string] string) {
 		s.WriteMessage(websocket.TextMessage, j)
 	}
 
-} // relay
+} // pushMap
 
 func subscriberHandler(w http.ResponseWriter, r *http.Request) {
 

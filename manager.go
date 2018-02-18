@@ -69,39 +69,42 @@ func managerHandler(w http.ResponseWriter, r *http.Request) {
     mc := ManagerCommand{}
 
 		json.Unmarshal(msg, &mc)
-		
-		log.Println(mc)
 
 		switch mc.Cmd {
 		case WS_LOGO:
-			relay(WS_LOGO, mc.Options)
+			pushMap(WS_LOGO, mc.Options)
 
 		case WS_LOGIN:
 			log.Println(WS_LOGIN)
 
 		case WS_SCOREBOARD:
-			relay(WS_SCOREBOARD, mc.Options)
+
+			if game != nil && game.Active {
+				pushMap(WS_SCOREBOARD, mc.Options)
+			} else {
+				pushMap(WS_SETUP, mc.Options)
+			}
 
 		case WS_ADVERTISEMENT:
-			relay(WS_ADVERTISEMENT, mc.Options)
+			pushMap(WS_ADVERTISEMENT, mc.Options)
 
 		case WS_VIDEO_PLAY:
-			relay(WS_VIDEO_PLAY, mc.Options)
+			pushMap(WS_VIDEO_PLAY, mc.Options)
 
 		case WS_VIDEO_STOP:
-			relay(WS_VIDEO_STOP, mc.Options)
+			pushMap(WS_VIDEO_STOP, mc.Options)
 
 		case WS_AUDIO_PLAY:
-			relay(WS_AUDIO_PLAY, mc.Options)
+			pushMap(WS_AUDIO_PLAY, mc.Options)
 
 		case WS_AUDIO_STOP:
-			relay(WS_AUDIO_STOP, mc.Options)
+			pushMap(WS_AUDIO_STOP, mc.Options)
 
 		case WS_PHOTO_PLAY:
-			relay(WS_PHOTO_PLAY, mc.Options)
-			
+			pushMap(WS_PHOTO_PLAY, mc.Options)
+
 		case WS_PHOTO_STOP:
-			relay(WS_PHOTO_STOP, mc.Options)
+			pushMap(WS_PHOTO_STOP, mc.Options)
 
 		default:
 			log.Println("unknown")

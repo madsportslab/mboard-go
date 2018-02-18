@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
   "net/http"
 
@@ -12,23 +11,6 @@ func scoreboardHandler(w http.ResponseWriter, r *http.Request) {
 
   switch r.Method {
   case http.MethodGet:
-
-		data := make(map[string]string)
-
-		addr, addrErr := getAddress()
-
-		if addrErr != nil {
-			log.Println(addrErr)
-			return
-		}
-
-		data["base"] = addr
-
-		if game.Settings != nil {
-			data["shot"] = fmt.Sprintf("%d", game.Settings.Shot)
-		} else {
-			data["shot"] = "24"
-		}
 
 	  compiler := amber.New()
 
@@ -52,9 +34,8 @@ func scoreboardHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		log.Println(data)
-
-		template.Execute(w, data)
+		template.Execute(w, nil)
+		//template.Execute(w, data)
 
   case http.MethodPost:
   case http.MethodDelete:

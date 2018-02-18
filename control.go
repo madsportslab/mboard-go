@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
   "net/http"
-	"sync"
+	//"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -24,6 +24,7 @@ const (
 	WS_FINAL            = "FINAL"
 	WS_ABORT      			= "ABORT"
 	WS_UNDO             = "UNDO"
+	WS_GAME_STATE       = "GAME_STATE"
 )
 
 const (
@@ -56,6 +57,7 @@ const (
 	WS_RET_TIMEOUT_FAIL_NONE  	= "TIMEOUT_FAILURE_NONE"
 	WS_RET_SHOT_VIOLATION     	= "SHOT_VIOLATION"
 	WS_RET_END_PERIOD         	= "END_PERIOD"
+	WS_RET_GAME_STATE           = "GAME_STATE"
 )
 
 const (
@@ -77,11 +79,6 @@ type Game struct {
 	Period    	int						`json:"period"`
 	Clk					*GameClocks		`json:"clk"`
 	Possession 	bool					`json:"possesion"`
-}
-
-type Notification struct {
-  Key 			string				`json:"key"`
-	Val				string				`json:"val"`
 }
 
 type Req struct {
@@ -121,29 +118,7 @@ func calcTotalScore(home bool) int {
 
 } // calcTotalScore
 
-func notify(key string, val string) {
 
-	n := Notification{
-		Key: key,
-		Val: val,
-	}
-
-	j, jsonErr := json.Marshal(n)
-
-	if jsonErr != nil {
-		log.Println(jsonErr)
-	}
-
-	for c, mu := range game.Conns {
-
-		mu.Lock()
-		c.WriteMessage(websocket.TextMessage, j)
-		mu.Unlock()
-
-	}
-
-
-} // notify
 
 func incrementPoints(name string, val int) {
 
@@ -162,7 +137,7 @@ func incrementPoints(name string, val int) {
 		game.GameData.Home.Points[game.GameData.Period] = total +
 			val
 
-		notify(WS_RET_HOME_SCORE, fmt.Sprintf("%d", calcTotalScore(true)))
+		pushString(WS_RET_HOME_SCORE, fmt.Sprintf("%d", calcTotalScore(true)))
 		
 	} else if name == AWAY {
 
@@ -175,7 +150,7 @@ func incrementPoints(name string, val int) {
 		game.GameData.Away.Points[game.GameData.Period] = total +
 			val
 
-		notify(WS_RET_AWAY_SCORE, fmt.Sprintf("%d", calcTotalScore(false)))
+		pushString(WS_RET_AWAY_SCORE, fmt.Sprintf("%d", calcTotalScore(false)))
 		
 	}
 
@@ -195,7 +170,7 @@ func incrementFoul(name string, val int) {
 
 		game.GameData.Home.Fouls = game.GameData.Home.Fouls + val
 		
-		notify(WS_RET_HOME_FOUL, fmt.Sprintf("%d", game.GameData.Home.Fouls))
+		pushString(WS_RET_HOME_FOUL, fmt.Sprintf("%d", game.GameData.Home.Fouls))
 
 	} else if name == AWAY {
 
@@ -205,7 +180,7 @@ func incrementFoul(name string, val int) {
 
 		game.GameData.Away.Fouls = game.GameData.Away.Fouls + val
 
-		notify(WS_RET_AWAY_FOUL, fmt.Sprintf("%d", game.GameData.Away.Fouls))
+		pushString(WS_RET_AWAY_FOUL, fmt.Sprintf("%d", game.GameData.Away.Fouls))
 
 	}
 
@@ -232,10 +207,10 @@ func incrementTimeout(name string, val int) bool {
 			game.GameData.Home.Timeouts = game.GameData.Home.Timeouts + val
 			
 			if val == -1 {
-				notify(WS_RET_HOME_TIMEOUT, fmt.Sprintf(
+				pushString(WS_RET_HOME_TIMEOUT, fmt.Sprintf(
 					"%d", game.GameData.Home.Timeouts))
 			} else if val == 1 {
-				notify(WS_RET_HOME_TIMEOUT_CANCEL, fmt.Sprintf(
+				pushString(WS_RET_HOME_TIMEOUT_CANCEL, fmt.Sprintf(
 					"%d", game.GameData.Home.Timeouts))
 			}
 
@@ -258,9 +233,9 @@ func incrementTimeout(name string, val int) bool {
 			game.GameData.Away.Timeouts = game.GameData.Away.Timeouts + val
 			
 			if val == -1 {
-				notify(WS_RET_AWAY_TIMEOUT, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
+				pushString(WS_RET_AWAY_TIMEOUT, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
 			} else {
-				notify(WS_RET_AWAY_TIMEOUT_CANCEL, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
+				pushString(WS_RET_AWAY_TIMEOUT_CANCEL, fmt.Sprintf("%d", game.GameData.Away.Timeouts))
 			}
 	
 			return true
@@ -283,7 +258,7 @@ func incrementPeriod(val int) {
 
 	game.GameData.Clk.GameClockReset()
 
-  notify(WS_RET_PERIOD, fmt.Sprintf("%d", game.GameData.Period))
+  pushString(WS_RET_PERIOD, fmt.Sprintf("%d", game.GameData.Period))
 
 } // incrementPeriod
 
@@ -293,13 +268,13 @@ func setPossession(name string, stopClock bool) {
  	 	
 		game.GameData.Possession = true
 
-		notify(WS_RET_POSSESSION_HOME, fmt.Sprintf("%b", stopClock))
+		pushString(WS_RET_POSSESSION_HOME, fmt.Sprintf("%b", stopClock))
 
 	} else if name == AWAY {
 		
 		game.GameData.Possession = false
 
-		notify(WS_RET_POSSESSION_AWAY, fmt.Sprintf("%b", stopClock))
+		pushString(WS_RET_POSSESSION_AWAY, fmt.Sprintf("%b", stopClock))
 
 	} else {
 		log.Println("Error: setPossession(), invalid possession string.")
@@ -320,11 +295,11 @@ func togglePossession(stopClock bool) {
 	if game.GameData.Possession {
 		
 		game.GameData.Possession = false
-		notify(WS_RET_POSSESSION_AWAY, fmt.Sprintf("%b", stopClock))
+		pushString(WS_RET_POSSESSION_AWAY, fmt.Sprintf("%b", stopClock))
 
 	} else {
 		game.GameData.Possession = true
-	  notify(WS_RET_POSSESSION_HOME, fmt.Sprintf("%b", stopClock))
+	  pushString(WS_RET_POSSESSION_HOME, fmt.Sprintf("%b", stopClock))
 	}
 
 	game.GameData.Clk.ShotClockReset()
@@ -335,7 +310,7 @@ func togglePossession(stopClock bool) {
 		game.GameData.Clk.Start()
 	}
 
- }
+} // togglePossession
 
 func firehose(game *GameInfo) {
 
@@ -347,17 +322,17 @@ func firehose(game *GameInfo) {
 		  game.GameData.Clk.Ticker.Stop()
 			
 			// TODO: play sound
-			notify(WS_RET_SHOT_VIOLATION, "1")
+			pushString(WS_RET_SHOT_VIOLATION, "1")
 			togglePossession(true)
 			
 		
 		case <-game.GameData.Clk.FinalChan:
 
 		  game.GameData.Clk.Ticker.Stop()
-			notify(WS_RET_END_PERIOD, "1")
+			pushString(WS_RET_END_PERIOD, "1")
 		
 		case s := <-game.GameData.Clk.OutChan:
-		  notify(WS_RET_CLOCK, string(s))
+		  pushString(WS_RET_CLOCK, string(s))
 		}
 
 	}
@@ -385,12 +360,8 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("game.Settings is nil")
 		return
 	}
-
-  game.Conns[c] = &sync.Mutex{}
-
+  
 	go firehose(game)
-
-	log.Println("connection #:", len(game.Conns))
 
 	defer c.Close()
 
@@ -414,6 +385,8 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
 		json.Unmarshal(msg, &req)
 		
+		log.Println(req)
+
 		req.Period = game.GameData.Period
 
 		switch req.Cmd {
@@ -501,6 +474,16 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 			if !incrementTimeout(AWAY, 1) {
 				req.Reason = MSG_MAX_TIMEOUTS
 			}
+
+		case WS_GAME_STATE:
+
+			state := getGameState()
+
+			log.Println(state);
+			if state != nil {
+				pushState(state)
+			}
+			
 		
 		default:
 		  log.Printf("[%s][Error] unsupported command: %s", version(), string(msg))

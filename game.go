@@ -10,10 +10,10 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
+	//"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
+	//"github.com/gorilla/websocket"
 )
 
 const (
@@ -61,13 +61,14 @@ type Config struct {
 type GameInfo struct {
   Settings			*Config
 	GameData			*Game
-	Conns 				map[*websocket.Conn]*sync.Mutex
+	//Conns 				map[*websocket.Conn]*sync.Mutex
 	Final         bool
 	Created       string
 	ID            int64
 	Active        bool
 }
 
+//TODO: remove gamestate struct?
 type GameState struct {
 	Settings      *Config   `json:"settings"`
 	Period        int				`json:"period"`
@@ -193,6 +194,28 @@ func generateId(config *Config, length int) string {
  
 } // generateId
 
+func getGameState() *GameState {
+
+	if game == nil {
+		return nil
+	} else {
+		
+		state := GameState{
+			Settings: game.Settings,
+			Period: game.GameData.Period,
+			Possession: game.GameData.Possession,
+			Home: game.GameData.Home,
+			Away: game.GameData.Away,
+			GameClock: game.GameData.Clk.PlayClock,
+			ShotClock: game.GameData.Clk.ShotClock,
+			ID: game.ID,
+		}
+
+		return &state
+
+	}
+
+} // getGameState
 
 func gameHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -229,18 +252,20 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 				Away: a,
 				Clk: c,
 			},
-			Conns: make(map[*websocket.Conn]*sync.Mutex),
+			//Conns: make(map[*websocket.Conn]*sync.Mutex),
 			Final: false,
 			Created: time.Now().String(),
 			ID: id,
 			Active: true,
 		}
 
-    game = &gi
+		game = &gi
+
+		pushMap(WS_SCOREBOARD, nil)
 
 	case http.MethodGet:
 
-    if game == nil {
+		if game == nil {
 			w.WriteHeader(http.StatusNotFound)
 		} else if game.Active {
 
@@ -291,26 +316,11 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 				// signal end of game to clients
 				// clean up all connections
 
-				n := Notification{
-					Key: "FINAL",
-					Val: "",
-				}
-
-				j, jsonErr := json.Marshal(n)
-
-				if jsonErr != nil {
-					log.Println(jsonErr)
-				}
-
-				for c, mu := range game.Conns {
-
-					mu.Lock()
-					c.WriteMessage(websocket.TextMessage, j)
-					mu.Unlock()
-
-				}
+				pushString(WS_FINAL, "")
 
 				game = &GameInfo{}
+
+				pushMap(WS_SETUP, nil)
 
 				w.WriteHeader(http.StatusOK)
 

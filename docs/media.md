@@ -1,8 +1,8 @@
 # media
 
 media can come in the form of video, audio, or photo.  media can be associated
-with games or generic media like an advertisement during a timeout or while a
-game is not being played.
+with games or generically associated with the mboard device.  potentially can
+support some type of presentation.
 
 ## actionable with media
 
@@ -12,6 +12,7 @@ game is not being played.
 1.  rewind
 1.  forward
 1.  loop
-1.  slideshow
-1.  random
+1.  slideshow (selected)
+1.  slideshow (random)
 1.  fixed time
+
