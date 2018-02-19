@@ -5,7 +5,7 @@ After=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/home/mboard/bin
-ExecStart=/home/mboard/bin/mboard-go
+ExecStart=/home/mboard/bin/mboard-go -mode 1 -database /home/mboard/data/mboard.db
 
 [Install]
 WantedBy=multi-user.target
