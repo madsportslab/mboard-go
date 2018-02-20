@@ -31,8 +31,8 @@ func sendToSubscribers(j []byte) {
 	for c, mu := range subscribers {
 		
 		mu.Lock()
-		defer mu.Unlock()
 		c.WriteMessage(websocket.TextMessage, j)
+		mu.Unlock()
 
 	}
 

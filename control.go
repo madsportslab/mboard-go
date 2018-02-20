@@ -118,8 +118,6 @@ func calcTotalScore(home bool) int {
 
 } // calcTotalScore
 
-
-
 func incrementPoints(name string, val int) {
 
   if game == nil {
@@ -426,8 +424,6 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 		case WS_ABORT:
 
 			game.GameData.Clk.Stop()
-
-			// close connections and channels
 		
 		case WS_SCORE_HOME:
       incrementPoints(HOME, req.Step)

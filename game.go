@@ -313,8 +313,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 				updateGame(game.ID, string(j))
 
-				// signal end of game to clients
-				// clean up all connections
+				game.GameData.Clk.Stop()
 
 				pushString(WS_FINAL, "")
 
