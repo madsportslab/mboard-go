@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Exec=/home/mboard/bin/electron/electron /home/mboard/bin/electron/resources/mboard-electron.asar
-Hidden=false
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Name=mboard

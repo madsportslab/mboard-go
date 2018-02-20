@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -23,7 +24,19 @@ type SubscriberStateResponse struct {
 	State     *GameState    `json:"state"`
 }
 
-var subscribers map[*websocket.Conn] bool
+var subscribers map[*websocket.Conn] *sync.Mutex
+
+func sendToSubscribers(j []byte) {
+
+	for c, mu := range subscribers {
+		
+		mu.Lock()
+		defer mu.Unlock()
+		c.WriteMessage(websocket.TextMessage, j)
+
+	}
+
+} // sendToSubscribers
 
 func pushState(state *GameState) {
 
@@ -38,9 +51,7 @@ func pushState(state *GameState) {
 		log.Println(jsonErr)
 	}
 
-	for c, _ := range subscribers {
-		c.WriteMessage(websocket.TextMessage, j)
-	}
+	sendToSubscribers(j)
 
 } // pushState
 
@@ -57,9 +68,7 @@ func pushString(key string, val string) {
 		log.Println(jsonErr)
 	}
 
-	for c, _ := range subscribers {
-		c.WriteMessage(websocket.TextMessage, j)
-	}
+	sendToSubscribers(j)
 
 } // pushString
 
@@ -77,9 +86,7 @@ func pushMap(msg string, options map[string] string) {
 		return
 	}
 
-	for s, _ := range subscribers {
-		s.WriteMessage(websocket.TextMessage, j)
-	}
+	sendToSubscribers(j)
 
 } // pushMap
 
@@ -103,10 +110,10 @@ func subscriberHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 
 	if subscribers == nil {
-		subscribers = make(map[*websocket.Conn]bool)
+		subscribers = make(map[*websocket.Conn]*sync.Mutex)
 	}
 
-	subscribers[c] = true
+	subscribers[c] = &sync.Mutex{}
 
 	for {
    
