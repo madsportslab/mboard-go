@@ -89,16 +89,14 @@ func managerHandler(w http.ResponseWriter, r *http.Request) {
 			pushMap(WS_ADVERTISEMENT, mc.Options)
 
 		case WS_VIDEO_PLAY:
-			err := videoPlay(mc.Options)
 
-			if err != nil {
-				log.Println(err)
-			}
-			
+			go videoPlay(mc.Options)
+
 			//pushMap(WS_VIDEO_PLAY, mc.Options)
 
 		case WS_VIDEO_STOP:
-			err := videoStop(mc.Options)
+
+			err := videoStop()
 
 			if err != nil {
 				log.Println(err)

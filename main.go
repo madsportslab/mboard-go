@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/godbus/dbus"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/skip2/go-qrcode"
@@ -48,23 +47,10 @@ var keyFile   = flag.String("key", "ssl.key", "SSL private key")
 var v         = flag.Bool("v", false, "version")
 
 var data *sql.DB = nil
-var thebus *dbus.Conn
 
 func version() string {
   return fmt.Sprintf(APPNAME, VERSION)
 } // version
-
-func initDbus() {
-
-	thebus, err := dbus.SessionBus()
-	 
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer thebus.Close()
-
-} //initDbus
 
 func initDatabase() {
 

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+  "io"
 	"log"
 	"net/http"
 	"os/exec"
@@ -18,16 +19,19 @@ const (
 	OMX_OPTION_O  				= "-o"
 	OMX_OPTION_D  				= "-d"
 	OMX_DBUS_DIR  				= "/org/mpris/MediaPlayer2"
-	OMX_DBUS_PLAYER				= "org.mpris.MediaPlayer2.omxplayer"
+	OMX_DBUS_PLAYER				= "org.mpris.MediaPlayer2.Player.Action"
   OMX_DBUS_STOP     		= 15
 )
 
-var omx *exec.Cmd
+var (
+  omx *exec.Cmd
+  mctl io.WriteCloser
+)
 
-func videoPlay(options map[string]string) error {
+func videoPlay(options map[string]string) {
 
 	if omx != nil {
-		return errors.New("Video already playing")
+		log.Println("Video already playing")
 	}
 
 	glbs.SetNamespace("blobs")
@@ -38,29 +42,40 @@ func videoPlay(options map[string]string) error {
 
 	omx = exec.Command(OMX_PLAYER, OMX_OPTION_O, OMX_HDMI, filename)
 
-	err := omx.Start()
+	ctl, err := omx.StdinPipe()
+
+  if err != nil {
+    log.Println(err)
+    return
+  }
+  
+  err = omx.Start()
  
 	if err != nil {
-		return err
+    log.Println(err)
+		return
 	}
+
+  mctl = ctl
 
 	err = omx.Wait()
 
 	if err != nil {
-		return err
+    log.Println(err)
+		return
 	}
 
-	return nil
-	
 } // videoPlay
 
-func videoStop(options map[string]string) error {
+func videoStop() error {
+
+  log.Println("stopping video")
 
 	if omx == nil {
 		return errors.New("No video playing")
 	}
 
-	err := thebus.Emit(OMX_DBUS_DIR, OMX_DBUS_PLAYER, OMX_DBUS_STOP)
+  _, err := io.WriteString(mctl, "q")
 
 	if err != nil {
 		return err
