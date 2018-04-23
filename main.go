@@ -88,6 +88,8 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/api/mgmt/details", detailsHandler)
 	router.HandleFunc("/api/mgmt/machine", machineHandler)
 	
+	router.HandleFunc("/clock", clockHandler)
+	router.HandleFunc("/shotclock", shotclockHandler)
 	router.HandleFunc("/scoreboard", scoreboardHandler)
 	router.HandleFunc("/setup", setupHandler)
 	router.HandleFunc("/logo", logoHandler)
