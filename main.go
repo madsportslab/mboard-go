@@ -92,10 +92,10 @@ func initRouter() *mux.Router {
 	router.HandleFunc("/shotclock", pageHandler)
 	router.HandleFunc("/scoreboard", scoreboardHandler)
 	router.HandleFunc("/setup", setupHandler)
-	router.HandleFunc("/logo", logoHandler)
+	router.HandleFunc("/logo", pageHandler)
 	router.HandleFunc("/video/{id:[0-9a-f]+}", videoHandler)
 	router.HandleFunc("/photo", photoHandler)
-	router.HandleFunc("/advertisement", advertisementHandler)
+	router.HandleFunc("/advertisement", pageHandler)
 	router.HandleFunc("/download", pageHandler)
 
 	//router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)
