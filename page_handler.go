@@ -1,21 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/eknkc/amber"
 )
 
 
-func shotclockHandler(w http.ResponseWriter, r *http.Request) {
+func pageHandler(w http.ResponseWriter, r *http.Request) {
 
   switch r.Method {
-	case http.MethodGet:
-		
-		compiler := amber.New()
+  case http.MethodGet:
 
-		err := compiler.ParseFile("mboard-www/shotclock.amber")
+		compiler := amber.New()
+		
+		resource := strings.Trim(r.URL.Path, "/")
+
+		err := compiler.ParseFile(fmt.Sprintf("mboard-www/%s.amber", resource))
 
 		if err != nil {
 			
@@ -37,11 +41,11 @@ func shotclockHandler(w http.ResponseWriter, r *http.Request) {
 
 		template.Execute(w, nil)
 
-  case http.MethodPost:
+	case http.MethodPost:
   case http.MethodDelete:
 	case http.MethodPut:
 	default:
 	  w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 
-} // shotclockHandler
+} // pageHandler
