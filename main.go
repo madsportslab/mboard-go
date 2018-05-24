@@ -52,7 +52,7 @@ func version() string {
   return fmt.Sprintf(APPNAME, VERSION)
 } // version
 
-func initDatabase() {
+func connectDatabase() {
 
   db, err := sql.Open("sqlite3", *database)
 
@@ -62,7 +62,7 @@ func initDatabase() {
 
 	data = db
 
-} // initDatabase
+} // connectDatabase
 
 func initRouter() *mux.Router {
 
@@ -90,13 +90,16 @@ func initRouter() *mux.Router {
 	
 	router.HandleFunc("/clock", pageHandler)
 	router.HandleFunc("/shotclock", pageHandler)
-	router.HandleFunc("/scoreboard", scoreboardHandler)
+	router.HandleFunc("/score", pageHandler)
+	router.HandleFunc("/scoreboard", pageHandler)
 	router.HandleFunc("/setup", setupHandler)
 	router.HandleFunc("/logo", pageHandler)
 	router.HandleFunc("/video/{id:[0-9a-f]+}", videoHandler)
 	router.HandleFunc("/photo", photoHandler)
 	router.HandleFunc("/advertisement", pageHandler)
 	router.HandleFunc("/download", pageHandler)
+	router.HandleFunc("/themes/{theme:[0-9a-z]+}/{view:[a-z]+}",
+		themeHandler)
 
 	//router.HandleFunc("/ws/games/{id:[0-9a-f]+}", controlHandler)
 	router.HandleFunc("/ws/game", controlHandler)
@@ -140,7 +143,7 @@ func main() {
 
   log.Printf("[%s] listening on port %s", version(), *port)
 
-  initDatabase()
+  connectDatabase()
 
   router := initRouter()
 
