@@ -29,6 +29,9 @@ TODO: credentials should be passed in such that malicious users cannot take cont
 
 ### PHOTO
 
+### THEME
+
+theme name, view (clock, score, scoreboard, shotclock)
 
 ## subscriber protocol
 

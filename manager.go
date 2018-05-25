@@ -11,8 +11,11 @@ import (
 const (
 	WS_LOGIN						=	"LOGIN"
 	WS_LOGO             = "LOGO"
+	WS_CLOCKONLY        = "CLOCKONLY"
+	WS_SHOTCLOCK        = "SHOTCLOCK"
   WS_SETUP            = "SETUP"
 	WS_SCOREBOARD				= "SCOREBOARD"
+	WS_THEME            = "THEME"
 	WS_ADVERTISEMENT		= "ADVERTISEMENT"
 	WS_VIDEO_PLAY       = "VIDEO_PLAY"
 	WS_VIDEO_STOP				= "VIDEO_STOP"
@@ -115,6 +118,9 @@ func managerHandler(w http.ResponseWriter, r *http.Request) {
 
 		case WS_PHOTO_STOP:
 			pushMap(WS_PHOTO_STOP, mc.Options)
+
+		case WS_THEME:
+			pushMap(WS_THEME, mc.Options)
 
 		default:
 			log.Println("unknown")
