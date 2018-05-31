@@ -16,6 +16,7 @@ const (
   WS_SETUP            = "SETUP"
 	WS_SCOREBOARD				= "SCOREBOARD"
 	WS_THEME            = "THEME"
+	WS_THEME_CURRENT    = "THEME_CURRENT"
 	WS_ADVERTISEMENT		= "ADVERTISEMENT"
 	WS_VIDEO_PLAY       = "VIDEO_PLAY"
 	WS_VIDEO_STOP				= "VIDEO_STOP"
@@ -25,7 +26,14 @@ const (
 	WS_AUDIO_STOP       = "AUDIO_STOP"
 )
 
+const (
+	THEME_DEFAULT				= "DEFAULT"
+	THEME_ORANGE        = "ORANGE"
+)
+
 var manager *websocket.Conn
+
+var currentTheme string = THEME_DEFAULT
 
 type ManagerCommand struct {
   Cmd 			string								`json:"cmd"`
@@ -70,6 +78,8 @@ func managerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
     mc := ManagerCommand{}
+
+		// TODO: check for error unmarshalling json
 
 		json.Unmarshal(msg, &mc)
 
@@ -121,6 +131,9 @@ func managerHandler(w http.ResponseWriter, r *http.Request) {
 
 		case WS_THEME:
 			pushMap(WS_THEME, mc.Options)
+
+		case WS_THEME_CURRENT:
+			pushMap(WS_THEME_CURRENT, mc.Options)
 
 		default:
 			log.Println("unknown")

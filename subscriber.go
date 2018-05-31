@@ -125,7 +125,6 @@ func subscriberHandler(w http.ResponseWriter, r *http.Request) {
 
 			if websocket.IsUnexpectedCloseError(err) {
 
-				//log.Println("Removing connection: ", c)
 				delete(subscribers, c)
 
 			}
@@ -135,9 +134,33 @@ func subscriberHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
     if msg == nil {
-			log.Println(msg)
-			break
-		}		
+			log.Println("mboard-go subscriber(): nil message")
+		} else {
+
+
+			mc := ManagerCommand{}
+
+			// TODO: check for error unmarshalling json
+
+			err := json.Unmarshal(msg, &mc)
+
+			if err != nil {
+				log.Println(err)
+			} else {
+
+				if mc.Cmd == WS_GAME_STATE {
+
+					state := getGameState()
+	
+					if state != nil {
+						pushState(state)
+					}
+	
+				}
+	
+			}
+
+		}
 
 	}
 	

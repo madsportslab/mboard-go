@@ -381,6 +381,7 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 
     req := Req{}
 
+		// TODO: check json unmarshal error
 		json.Unmarshal(msg, &req)
 		
 		log.Println(req)
@@ -470,16 +471,15 @@ func controlHandler(w http.ResponseWriter, r *http.Request) {
 			if !incrementTimeout(AWAY, 1) {
 				req.Reason = MSG_MAX_TIMEOUTS
 			}
-
+/*
 		case WS_GAME_STATE:
 
 			state := getGameState()
 
-			log.Println(state);
 			if state != nil {
 				pushState(state)
 			}
-			
+*/			
 		
 		default:
 		  log.Printf("[%s][Error] unsupported command: %s", version(), string(msg))
