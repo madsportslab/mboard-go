@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -29,6 +30,12 @@ const (
 const (
 	THEME_DEFAULT				= "DEFAULT"
 	THEME_ORANGE        = "ORANGE"
+	THEME_TEAL					= "TEAL"
+)
+
+const (
+	KEY_CURRENT_THEME   = "current-theme"
+	KEY_THEME           = "theme"
 )
 
 var manager *websocket.Conn
@@ -92,6 +99,9 @@ func managerHandler(w http.ResponseWriter, r *http.Request) {
 
 		case WS_SCOREBOARD:
 
+			log.Println("fag")
+			log.Println(mc)
+
 			if game != nil && game.Active {
 				pushMap(WS_SCOREBOARD, mc.Options)
 			} else {
@@ -130,10 +140,32 @@ func managerHandler(w http.ResponseWriter, r *http.Request) {
 			pushMap(WS_PHOTO_STOP, mc.Options)
 
 		case WS_THEME:
-			pushMap(WS_THEME, mc.Options)
+
+			if mc.Options[KEY_THEME] != "" {
+
+				newTheme := strings.ToUpper(mc.Options[KEY_THEME])
+
+				if newTheme == THEME_ORANGE {
+					currentTheme = THEME_ORANGE
+				} else if newTheme == THEME_TEAL {
+					currentTheme = THEME_TEAL
+				} else {
+					currentTheme = THEME_DEFAULT
+				}
+	
+				pushMap(WS_THEME, mc.Options)
+	
+			} else {
+				log.Println("mboard-go manager(): theme was empty")
+			}
 
 		case WS_THEME_CURRENT:
-			pushMap(WS_THEME_CURRENT, mc.Options)
+
+			m := make(map[string]string)
+
+			m[KEY_CURRENT_THEME] = currentTheme
+
+			pushMap(WS_THEME_CURRENT, m)
 
 		default:
 			log.Println("unknown")

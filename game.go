@@ -196,10 +196,12 @@ func generateId(config *Config, length int) string {
 
 func getGameState() *GameState {
 
-	if game == nil {
+	if game == nil || game.ID == 0 {
 		return nil
 	} else {
 		
+		log.Println(game)
+
 		state := GameState{
 			Settings: game.Settings,
 			Period: game.GameData.Period,
