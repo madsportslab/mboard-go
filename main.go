@@ -120,7 +120,7 @@ func generateQR() {
 		log.Fatal(err)
 	} else {
 
-		err := qrcode.WriteFile(ip, qrcode.Medium, 512, "mboard-www/qr.png")
+		err := qrcode.WriteFile(ip, qrcode.Medium, 1024, "mboard-www/qr.png")
 		
 		if err != nil {
 			log.Println(err)
