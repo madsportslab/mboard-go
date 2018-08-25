@@ -7,6 +7,7 @@ Type=simple
 WorkingDirectory=/home/mboard/bin
 ExecStart=/home/mboard/bin/mboard-go -mode 1 -database /home/mboard/data/mboard.db
 Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
