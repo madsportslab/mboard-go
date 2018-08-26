@@ -58,7 +58,7 @@ func getAddress() (string, error) {
 
 			if err != nil {
 				log.Println(err)
-				break
+				continue
 			}
 
 			for _, addr := range addrs {
